@@ -1,69 +1,121 @@
-# React + TypeScript + Vite
+# WordPress連携 React アイコンカスタマイザー
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+---
 
-Currently, two official plugins are available:
+## はじめに
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+このプロジェクトは、WordPressのサイトに簡単に組み込める「アイコンを自由に作れるツール」です。  
+難しい操作や専門知識は不要で、管理画面から初期設定をして、記事やページにショートコードを入れるだけで使えます。  
 
-## Expanding the ESLint configuration
+サイトを訪れた人は、丸や四角の形を選んだり、大きさや背景の色を変えたりして、オリジナルのアイコンを作成できます。  
+作ったアイコンは画像としてダウンロードもできるので、ブログやSNSなど色々な場面で活用できます。  
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Reactで作成しており、スマホでもパソコンでも快適に使えるように作られています。  
+また、WordPressの人気テーマ「SWELL」と相性よく動くように工夫しています。
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## コンセプト
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- WordPress管理画面からのシンプルな設定操作  
+- 直感的かつレスポンシブなReact UI  
+- CSS競合を防ぐためのTailwind `tw-` プレフィックス  
+- ショートコードによる簡単埋め込み  
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 概要
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- WordPress管理画面に「アイコンカスタマイザー設定」ページを追加し、初期画像URLなどを設定可能  
+- 投稿・固定ページにショートコード `[icon_customizer]` を記述しReactアプリを表示  
+- ユーザーは丸・角形状の切り替え、サイズ調整、背景色変更をリアルタイムに操作可能  
+- 編集したアイコンはPNG形式でダウンロード可能  
+- Tailwind CSS（`tw-` prefix）でSWELLテーマとのスタイル競合を防止  
+- レスポンシブ対応によりスマホでも快適に使用可能  
+
+---
+
+## Demo動画
+
+（デモ動画やスクリーンキャプチャのリンク・埋め込みをここに追加）
+
+---
+
+## 環境
+
+- React 18（Vite）  
+- Tailwind CSS（`tw-` prefix付与）  
+- html2canvas（画像ダウンロード用）  
+- WordPress（SWELLテーマ想定）  
+- GitHubによるバージョン管理  
+
+---
+
+## 利用方法
+
+依存パッケージをインストール：
+
+    npm install
+
+開発モード起動（ローカルで動作確認）：
+
+    npm run dev
+
+本番用ファイルをビルド：
+
+    npm run build
+
+生成された `dist` フォルダ内のファイルを  
+WordPressテーマやプラグインの適切な場所に配置してください。
+
+---
+
+## アクセス
+
+開発サーバー起動後、以下のURLにアクセスすることでアプリを確認できます：
+
+    http://localhost:3000
+
+※ ポート番号は環境により異なることがあります。ターミナルに表示されるURLをご確認ください。
+
+---
+
+## プロジェクト構造
+
+    icon-editor/
+    ├── public/              # 静的ファイル
+    ├── src/                 # アプリのメインコード
+    │   ├── components/      # Reactコンポーネント群
+    │   ├── pages/           # ページ構成（必要に応じて）
+    │   └── main.tsx         # エントリーポイント
+    ├── index.html
+    ├── tailwind.config.ts
+    ├── vite.config.ts
+    ├── package.json
+    └── README.md
+
+---
+
+## WordPressへの組み込み
+
+- 管理画面の「アイコンカスタマイザー設定」から初期画像URLなどを登録  
+- 投稿・固定ページにショートコード `[icon_customizer]` を記述して利用  
+
+---
+
+## 今後の拡張案
+
+- 複数アイコンの管理・切り替え機能  
+- WordPress REST APIを活用した設定管理の高度化  
+- 管理画面から背景色プリセットの追加・編集機能  
+- ユーザー単位のカスタマイズ保存機能  
+
+---
+
+## 終わりに
+
+本プロジェクトは、WordPress管理者が扱いやすく、エンドユーザーにとっても直感的に操作できるアイコンカスタマイズ体験を提供します。  
+Reactのモダンな技術とWordPressの柔軟性を活かし、両者の利点を融合した実用的なソリューションを目指しています。
+
+ご質問やフィードバックはいつでも歓迎いたします。  
+ぜひご覧いただき、ご活用ください。
