@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import IconPreview from "./components/IconPreview";
+import { IconPreview, ShapeSelector } from "./components";
 
 const TestPage: React.FC = () => {
   const [shape, setShape] = useState<"circle" | "square">("circle");
@@ -56,31 +56,10 @@ const TestPage: React.FC = () => {
       </div>
 
       {/* 形状選択 */}
-      <div className="tw-text-center tw-space-y-4">
-        <h3 className="tw-text-lg tw-font-bold">形状選択</h3>
-        <div className="tw-flex tw-justify-center tw-gap-4">
-          <button
-            className={`tw-px-6 tw-py-3 tw-rounded-lg tw-font-bold ${
-              shape === "circle"
-                ? "tw-bg-green-500 tw-text-white"
-                : "tw-bg-gray-200 tw-text-gray-700 hover:tw-bg-gray-300"
-            }`}
-            onClick={() => setShape("circle")}
-          >
-            まる●
-          </button>
-          <button
-            className={`tw-px-6 tw-py-3 tw-rounded-lg tw-font-bold ${
-              shape === "square"
-                ? "tw-bg-green-500 tw-text-white"
-                : "tw-bg-gray-200 tw-text-gray-700 hover:tw-bg-gray-300"
-            }`}
-            onClick={() => setShape("square")}
-          >
-            □しかく
-          </button>
-        </div>
-      </div>
+      <ShapeSelector
+        selectedShape={shape}
+        onChangeShape={setShape}
+      />
 
       {/* 背景色選択 */}
       <div className="tw-text-center tw-space-y-4">
