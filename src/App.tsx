@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { IconPreview, ShapeSelector } from "./components";
+import { IconPreview, ShapeSelector, ImageUploader } from "./components";
 
 /**
  * アイコンエディタのメインページコンポーネント
  * 
  * 機能概要:
  * - アイコンの形状（circle/square）、サイズ、背景色を制御
+ * - 画像アップロード機能（FileReader API使用）
  * - リアルタイムプレビュー表示
- * - PNG形式でのダウンロード機能
+ * - エラーハンドリングとユーザーフィードバック
  * - WordPressショートコード埋め込み対応を想定した設計
  */
 const TestPage: React.FC = () => {
@@ -17,7 +18,15 @@ const TestPage: React.FC = () => {
   const [size, setSize] = useState(128);
   // 背景色の状態管理 - 初期値は視認性の良い金色
   const [bgColor, setBgColor] = useState("#FFD700");
+  // アップロードされた画像のDataURL状態管理
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  // アップロードされた画像のファイル名状態管理（表示用）
+  const [uploadedImageName, setUploadedImageName] = useState<string>('');
+  // エラーメッセージの状態管理
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
+  // デフォルト画像URL（アップロード画像がない場合の代替）
+  const DEFAULT_IMAGE_URL = "https://picsum.photos/200/200?random=1";
   /**
    * アイコンサイズを大きくする関数
    * 最大サイズ300pxで制限（UI表示とパフォーマンスのバランス）
@@ -34,22 +43,63 @@ const TestPage: React.FC = () => {
     setSize(prev => Math.max(prev - 20, 60));
   };
 
+  /**
+   * 画像アップロード完了時の処理
+   * ImageUploaderコンポーネントからのコールバック
+   */
+  const handleImageUpload = (imageDataUrl: string | null) => {
+    setUploadedImageUrl(imageDataUrl);
+    setErrorMessage(''); // エラーメッセージをクリア
+    
+    // ファイル名の更新（簡易的な処理）
+    if (imageDataUrl) {
+      setUploadedImageName(`アップロード画像-${Date.now()}`);
+    } else {
+      setUploadedImageName('');
+    }
+  };
+
+  /**
+   * 画像アップロードエラー時の処理
+   * ImageUploaderコンポーネントからのエラーコールバック
+   */
+  const handleImageUploadError = (error: string) => {
+    setErrorMessage(error);
+    // エラー表示を5秒後に自動でクリア
+    setTimeout(() => setErrorMessage(''), 5000);
+  };
+
   return (
     <div className="tw-p-8 tw-space-y-6 tw-max-w-md tw-mx-auto">
+      {/* エラーメッセージ表示エリア */}
+      {errorMessage && (
+        <div className="tw-p-4 tw-bg-red-100 tw-border tw-border-red-300 tw-text-red-700 tw-rounded-lg tw-text-sm">
+          ⚠️ {errorMessage}
+        </div>
+      )}
+
       {/* アイコンプレビューエリア - 灰色背景で視認性向上 */}
       <div className="tw-flex tw-justify-center tw-p-8 tw-bg-gray-100 tw-rounded-lg">
         <IconPreview
-          imageUrl="https://picsum.photos/200/200?random=1" // テスト用のランダム画像（本番では設定可能にする予定）
+          imageUrl={uploadedImageUrl || DEFAULT_IMAGE_URL} // アップロード画像 or デフォルト画像
           shape={shape}
           size={size}
           backgroundColor={bgColor}
           onDownload={() => console.log('PNG ダウンロード開始 - サイズ:', size, '形状:', shape, '背景色:', bgColor)}
         />
       </div>
+
+      {/* 画像アップロード機能 */}
+      <ImageUploader
+        onImageUpload={handleImageUpload}
+        onError={handleImageUploadError}
+        currentImageName={uploadedImageName}
+      />
       
       {/* 現在の設定値表示エリア（デバッグ・確認用） */}
       <div className="tw-text-center tw-p-4 tw-bg-yellow-100 tw-rounded">
         <h4 className="tw-font-bold">現在の設定</h4>
+        <p>画像: {uploadedImageName || 'デフォルト画像'}</p>
         <p>形状: {shape === "circle" ? "丸●" : "□四角"}</p>
         <p>サイズ: {size}px</p>
         <p>背景色: {bgColor}</p>
