@@ -27,7 +27,6 @@ const TestPage: React.FC = () => {
 
   // デフォルト画像URL（アップロード画像がない場合の代替）
   const DEFAULT_IMAGE_URL = "https://picsum.photos/200/200?random=1";
-
   /**
    * アイコンサイズを大きくする関数
    * 最大サイズ300pxで制限（UI表示とパフォーマンスのバランス）
@@ -86,6 +85,7 @@ const TestPage: React.FC = () => {
           shape={shape}
           size={size}
           backgroundColor={bgColor}
+          onDownload={() => console.log('PNG ダウンロード開始 - サイズ:', size, '形状:', shape, '背景色:', bgColor)}
         />
       </div>
 
