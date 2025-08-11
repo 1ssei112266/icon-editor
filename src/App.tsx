@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import '@mantine/core/styles.css';
-import '@mantine/dropzone/styles.css';
+import html2canvas from 'html2canvas';
+
 import {
   MantineProvider,
   Container,
@@ -14,33 +15,95 @@ import {
   Box,
   ActionIcon,
   Transition,
+  ColorPicker,
 } from '@mantine/core';
-import { Dropzone, IMAGE_MIME_TYPE } from '@mantine/dropzone';
-import { IconUpload, IconPhoto, IconX, IconDownload, IconSettings } from '@tabler/icons-react';
+
+import { IconX, IconDownload, IconSettings } from '@tabler/icons-react';
 
 function App() {
   const [shape, setShape] = useState<string>('circle');
   const [imageScale, setImageScale] = useState<number>(80); // 画像の拡大率（60-100%）
   const [bgColor, setBgColor] = useState<string>('#60a5fa'); // blue-400
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{id: number, name: string, url: string, category: string} | null>(null);
   const [isCustomizing, setIsCustomizing] = useState<boolean>(false);
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState<boolean>(false);
   
   // アイコンコンテナの固定サイズ
   const CONTAINER_SIZE = 256;
 
-  const handleDrop = (files: File[]) => {
-    if (files[0]) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImageUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(files[0]);
+  const downloadIcon = async () => {
+    console.log('ダウンロード開始:', { shape, imageScale, bgColor, selectedImage });
+    
+    // アイコンコンテナ要素を取得
+    const iconContainer = document.querySelector('[data-icon-container]') as HTMLElement;
+    if (!iconContainer) {
+      console.error('アイコンコンテナが見つかりません');
+      return;
+    }
+
+    try {
+      // html2canvasでPNG画像を生成
+      const canvas = await html2canvas(iconContainer, {
+        useCORS: true, // CORS対応
+        allowTaint: true,
+        logging: false
+      });
+
+      // ダウンロード用のリンクを作成
+      const link = document.createElement('a');
+      link.download = `icon-${selectedImage?.name || 'custom'}-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      
+      // ダウンロード実行
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log('ダウンロード完了');
+    } catch (error) {
+      console.error('ダウンロードエラー:', error);
     }
   };
 
-  const downloadIcon = () => {
-    console.log('ダウンロード開始:', { shape, imageScale, bgColor });
-  };
+  // WordPress管理人が登録した画像一覧（モックデータ）
+  const adminImages = [
+    {
+      id: 1,
+      name: 'ハート',
+      url: 'https://picsum.photos/256/256?random=1',
+      category: 'アイコン'
+    },
+    {
+      id: 2,
+      name: '星',
+      url: 'https://picsum.photos/256/256?random=2',
+      category: 'アイコン'
+    },
+    {
+      id: 3,
+      name: '花',
+      url: 'https://picsum.photos/256/256?random=3',
+      category: '自然'
+    },
+    {
+      id: 4,
+      name: 'ロゴA',
+      url: 'https://picsum.photos/256/256?random=4',
+      category: 'ロゴ'
+    },
+    {
+      id: 5,
+      name: 'ロゴB',
+      url: 'https://picsum.photos/256/256?random=5',
+      category: 'ロゴ'
+    },
+    {
+      id: 6,
+      name: '矢印',
+      url: 'https://picsum.photos/256/256?random=6',
+      category: 'アイコン'
+    }
+  ];
 
   const colorSwatches = [
     { color: '#a8dadc', name: 'ライトブルー' },
@@ -95,6 +158,7 @@ function App() {
                 >
                   {/* 固定サイズのアイコンコンテナ */}
                   <Box
+                    data-icon-container
                     style={{
                       width: CONTAINER_SIZE,
                       height: CONTAINER_SIZE,
@@ -109,13 +173,13 @@ function App() {
                       overflow: 'hidden', // 画像がはみ出ないように
                     }}
                   >
-                    {imageUrl ? (
-                      /* カスタム画像 - サイズ可変 */
+                    {selectedImage ? (
+                      /* 選択された画像 */
                       <Box
                         style={{
                           width: imageSize,
                           height: imageSize,
-                          backgroundImage: `url(${imageUrl})`,
+                          backgroundImage: `url(${selectedImage.url})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                           borderRadius: shape === 'circle' ? '50%' : '8px',
@@ -123,7 +187,7 @@ function App() {
                         }}
                       />
                     ) : (
-                      /* デフォルトアイコン - サイズも可変 */
+                      /* プレースホルダーアイコン */
                       <Box
                         style={{
                           width: imageSize,
@@ -225,6 +289,45 @@ function App() {
                 }}
               >
                 <Stack gap="md">
+                  {/* 画像選択 */}
+                  <Stack gap="xs">
+                    <Text size="sm" fw={600} c="dark" ta="center">画像を選択</Text>
+                    <Group gap="xs" justify="center">
+                      {adminImages.map((image) => (
+                        <ActionIcon
+                          key={image.id}
+                          size={48}
+                          radius="md"
+                          variant="subtle"
+                          style={{
+                            backgroundImage: `url(${image.url})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            border: `3px solid ${selectedImage?.id === image.id ? '#3b82f6' : '#d1d5db'}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onClick={() => setSelectedImage(image)}
+                          onMouseEnter={(e) => {
+                            if (selectedImage?.id !== image.id) {
+                              e.currentTarget.style.transform = 'scale(1.1)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                        />
+                      ))}
+                    </Group>
+                    {selectedImage && (
+                      <Text size="xs" c="dimmed" ta="center">
+                        選択中: {selectedImage.name}
+                      </Text>
+                    )}
+                  </Stack>
+
                   {/* 形状選択 */}
                   <Group gap="sm" justify="center" align="center">
                     <Button
@@ -315,6 +418,28 @@ function App() {
                         }}
                       />
                     ))}
+                    
+                    {/* カスタムカラーボタン - 虹色グラデーション */}
+                    <ActionIcon
+                      size={28}
+                      radius="50%"
+                      variant="subtle"
+                      style={{
+                        background: 'linear-gradient(45deg, #ff0000, #ff8800, #ffff00, #88ff00, #00ff00, #00ff88, #00ffff, #0088ff, #0000ff, #8800ff, #ff00ff, #ff0088)',
+                        border: `3px solid ${!colorSwatches.find(s => s.color === bgColor) ? 'white' : '#374151'}`,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={() => setIsColorPickerOpen(true)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.1)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    />
                   </Group>
 
                   {/* 利用規約テキスト */}
@@ -345,25 +470,60 @@ function App() {
           )}
         </Transition>
 
-        {/* 全画面ドロップゾーン */}
-        <Dropzone
-          onDrop={handleDrop}
-          onReject={(files) => console.log('rejected files', files)}
-          maxSize={3 * 1024 ** 2}
-          accept={IMAGE_MIME_TYPE}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: -1,
-            backgroundColor: 'transparent',
-            border: 'none'
-          }}
+        {/* カスタムカラーピッカー - 右サイドパネル */}
+        <Transition
+          mounted={isColorPickerOpen}
+          transition="slide-left"
+          duration={400}
+          timingFunction="ease"
         >
-          <Box />
-        </Dropzone>
+          {(styles) => (
+            <Box
+              style={{
+                ...styles,
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                height: '100vh',
+                width: '320px',
+                zIndex: 2000,
+                backgroundColor: 'white',
+                boxShadow: '-10px 0 40px rgba(0,0,0,0.3)',
+                padding: '24px',
+                overflowY: 'auto',
+              }}
+            >
+              <Group justify="space-between" mb="lg">
+                <Text size="lg" fw={700}>色を選択</Text>
+                <ActionIcon
+                  size="lg"
+                  variant="subtle"
+                  onClick={() => setIsColorPickerOpen(false)}
+                >
+                  <IconX size={20} />
+                </ActionIcon>
+              </Group>
+
+              <ColorPicker
+                value={bgColor}
+                onChange={(color) => {
+                  setBgColor(color);
+                }}
+                onChangeEnd={(color) => {
+                  setBgColor(color);
+                  setIsColorPickerOpen(false);
+                }}
+                format="hex"
+                size="lg"
+                swatches={[
+                  '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57',
+                  '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43',
+                  '#feca57', '#48dbfb', '#ff0066', '#1dd1a1', '#ffa502'
+                ]}
+              />
+            </Box>
+          )}
+        </Transition>
       </Box>
     </MantineProvider>
   );
