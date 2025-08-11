@@ -20,10 +20,13 @@ import { IconUpload, IconPhoto, IconX, IconDownload, IconSettings } from '@table
 
 function App() {
   const [shape, setShape] = useState<string>('circle');
-  const [size, setSize] = useState<number>(192);
+  const [imageScale, setImageScale] = useState<number>(80); // 画像の拡大率（60-100%）
   const [bgColor, setBgColor] = useState<string>('#60a5fa'); // blue-400
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isCustomizing, setIsCustomizing] = useState<boolean>(false);
+  
+  // アイコンコンテナの固定サイズ
+  const CONTAINER_SIZE = 256;
 
   const handleDrop = (files: File[]) => {
     if (files[0]) {
@@ -36,7 +39,7 @@ function App() {
   };
 
   const downloadIcon = () => {
-    console.log('ダウンロード開始:', { shape, size, bgColor });
+    console.log('ダウンロード開始:', { shape, imageScale, bgColor });
   };
 
   const colorSwatches = [
@@ -51,7 +54,8 @@ function App() {
     { color: '#000000', name: 'ブラック' },
   ];
 
-  const sizePercentage = Math.round((size / 300) * 100);
+  // 画像サイズを計算（CONTAINER_SIZEの何%か）
+  const imageSize = Math.round((CONTAINER_SIZE * imageScale) / 100);
 
   return (
     <MantineProvider>
@@ -89,27 +93,51 @@ function App() {
                     justifyContent: 'center'
                   }}
                 >
+                  {/* 固定サイズのアイコンコンテナ */}
                   <Box
                     style={{
-                      width: size,
-                      height: size,
+                      width: CONTAINER_SIZE,
+                      height: CONTAINER_SIZE,
                       backgroundColor: bgColor,
                       borderRadius: shape === 'circle' ? '50%' : '16px',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-                      backgroundImage: imageUrl ? `url(${imageUrl})` : 'none',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
                       border: '4px solid white',
-                      transition: 'all 0.3s ease'
+                      transition: 'all 0.3s ease',
+                      overflow: 'hidden', // 画像がはみ出ないように
                     }}
                   >
-                    {!imageUrl && (
-                      <Text size="4rem" style={{ opacity: 0.7 }}>
+                    {imageUrl ? (
+                      /* カスタム画像 - サイズ可変 */
+                      <Box
+                        style={{
+                          width: imageSize,
+                          height: imageSize,
+                          backgroundImage: `url(${imageUrl})`,
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          borderRadius: shape === 'circle' ? '50%' : '8px',
+                          transition: 'all 0.3s ease'
+                        }}
+                      />
+                    ) : (
+                      /* デフォルトアイコン - サイズも可変 */
+                      <Box
+                        style={{
+                          width: imageSize,
+                          height: imageSize,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: `${imageSize * 0.25}px`, // アイコンサイズに比例
+                          opacity: 0.7,
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
                         🎨
-                      </Text>
+                      </Box>
                     )}
                   </Box>
                 </Paper>
@@ -230,29 +258,29 @@ function App() {
                     </Button>
                   </Group>
 
-                  {/* サイズ調整 */}
+                  {/* 画像サイズ調整 */}
                   <Group gap="sm" justify="center" align="center">
                     <Button
                       variant="light"
                       color="blue.7"
                       radius="md"
                       size="xs"
-                      onClick={() => setSize(Math.max(60, size - 20))}
-                      disabled={size <= 60}
+                      onClick={() => setImageScale(Math.max(60, imageScale - 5))}
+                      disabled={imageScale <= 60}
                       style={{ fontWeight: 500 }}
                     >
                       小さく
                     </Button>
                     <Text size="md" fw={700} c="dark" style={{ minWidth: '40px', textAlign: 'center' }}>
-                      {sizePercentage}%
+                      {imageScale}%
                     </Text>
                     <Button
                       variant="light"
                       color="blue.7"
                       radius="md"
                       size="xs"
-                      onClick={() => setSize(Math.min(300, size + 20))}
-                      disabled={size >= 300}
+                      onClick={() => setImageScale(Math.min(150, imageScale + 5))}
+                      disabled={imageScale >= 150}
                       style={{ fontWeight: 500 }}
                     >
                       大きく
@@ -317,35 +345,25 @@ function App() {
           )}
         </Transition>
 
-        {/* 画像アップロード用（隠し要素） */}
-        <Box style={{ display: 'none' }}>
-          <Dropzone
-            onDrop={handleDrop}
-            onReject={(files) => console.log('rejected files', files)}
-            maxSize={3 * 1024 ** 2}
-            accept={IMAGE_MIME_TYPE}
-          >
-            <Group justify="center" gap="xl" mih={120} style={{ pointerEvents: 'none' }}>
-              <Dropzone.Accept>
-                <IconUpload size="3.2rem" stroke={1.5} />
-              </Dropzone.Accept>
-              <Dropzone.Reject>
-                <IconX size="3.2rem" stroke={1.5} />
-              </Dropzone.Reject>
-              <Dropzone.Idle>
-                <IconPhoto size="3.2rem" stroke={1.5} />
-              </Dropzone.Idle>
-              <div>
-                <Text size="xl" inline>
-                  画像をドラッグ&ドロップ
-                </Text>
-                <Text size="sm" c="dimmed" inline mt={7}>
-                  ファイルサイズは3MB以下
-                </Text>
-              </div>
-            </Group>
-          </Dropzone>
-        </Box>
+        {/* 全画面ドロップゾーン */}
+        <Dropzone
+          onDrop={handleDrop}
+          onReject={(files) => console.log('rejected files', files)}
+          maxSize={3 * 1024 ** 2}
+          accept={IMAGE_MIME_TYPE}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: -1,
+            backgroundColor: 'transparent',
+            border: 'none'
+          }}
+        >
+          <Box />
+        </Dropzone>
       </Box>
     </MantineProvider>
   );
