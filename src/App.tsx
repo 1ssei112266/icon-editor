@@ -1,156 +1,117 @@
-import React, { useState } from "react";
-import { IconPreview, ShapeSelector, ImageUploader } from "./components";
+import React from 'react';
 
-/**
- * アイコンエディタのメインページコンポーネント
- * 
- * 機能概要:
- * - アイコンの形状（circle/square）、サイズ、背景色を制御
- * - 画像アップロード機能（FileReader API使用）
- * - リアルタイムプレビュー表示
- * - エラーハンドリングとユーザーフィードバック
- * - WordPressショートコード埋め込み対応を想定した設計
- */
-const TestPage: React.FC = () => {
-  // アイコン形状の状態管理 - 初期値は円形
-  const [shape, setShape] = useState<"circle" | "square">("circle");
-  // アイコンサイズの状態管理 - 初期値128px（適度なプレビューサイズ）
-  const [size, setSize] = useState(128);
-  // 背景色の状態管理 - 初期値は視認性の良い金色
-  const [bgColor, setBgColor] = useState("#FFD700");
-  // アップロードされた画像のDataURL状態管理
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
-  // アップロードされた画像のファイル名状態管理（表示用）
-  const [uploadedImageName, setUploadedImageName] = useState<string>('');
-  // エラーメッセージの状態管理
-  const [errorMessage, setErrorMessage] = useState<string>('');
-
-  // デフォルト画像URL（アップロード画像がない場合の代替）
-  const DEFAULT_IMAGE_URL = "https://picsum.photos/200/200?random=1";
-  /**
-   * アイコンサイズを大きくする関数
-   * 最大サイズ300pxで制限（UI表示とパフォーマンスのバランス）
-   */
-  const increaseSize = () => {
-    setSize(prev => Math.min(prev + 20, 300));
-  };
-
-  /**
-   * アイコンサイズを小さくする関数
-   * 最小サイズ60pxで制限（視認性を保つため）
-   */
-  const decreaseSize = () => {
-    setSize(prev => Math.max(prev - 20, 60));
-  };
-
-  /**
-   * 画像アップロード完了時の処理
-   * ImageUploaderコンポーネントからのコールバック
-   */
-  const handleImageUpload = (imageDataUrl: string | null) => {
-    setUploadedImageUrl(imageDataUrl);
-    setErrorMessage(''); // エラーメッセージをクリア
-    
-    // ファイル名の更新（簡易的な処理）
-    if (imageDataUrl) {
-      setUploadedImageName(`アップロード画像-${Date.now()}`);
-    } else {
-      setUploadedImageName('');
-    }
-  };
-
-  /**
-   * 画像アップロードエラー時の処理
-   * ImageUploaderコンポーネントからのエラーコールバック
-   */
-  const handleImageUploadError = (error: string) => {
-    setErrorMessage(error);
-    // エラー表示を5秒後に自動でクリア
-    setTimeout(() => setErrorMessage(''), 5000);
-  };
-
+function App() {
   return (
-    <div className="tw-p-8 tw-space-y-6 tw-max-w-md tw-mx-auto">
-      {/* エラーメッセージ表示エリア */}
-      {errorMessage && (
-        <div className="tw-p-4 tw-bg-red-100 tw-border tw-border-red-300 tw-text-red-700 tw-rounded-lg tw-text-sm">
-          ⚠️ {errorMessage}
+    <div className="tw-min-h-screen tw-bg-gradient-to-br tw-from-indigo-50 tw-to-purple-100">
+      <div className="tw-container tw-mx-auto tw-px-4 tw-py-8">
+        <header className="tw-text-center tw-mb-12">
+          <h1 className="tw-text-4xl tw-font-bold tw-text-gray-800 tw-mb-4">
+            アイコンエディター
+          </h1>
+          <p className="tw-text-gray-600 tw-text-lg">
+            美しいアイコンを簡単にカスタマイズ・作成
+          </p>
+        </header>
+
+        <div className="tw-max-w-6xl tw-mx-auto tw-grid tw-grid-cols-1 lg:tw-grid-cols-2 tw-gap-8">
+          {/* プレビューエリア */}
+          <div className="tw-bg-white tw-rounded-2xl tw-shadow-xl tw-p-8">
+            <h2 className="tw-text-2xl tw-font-semibold tw-text-gray-800 tw-mb-6 tw-text-center">
+              プレビュー
+            </h2>
+            <div className="tw-flex tw-justify-center tw-items-center tw-min-h-[300px]">
+              <div className="tw-w-48 tw-h-48 tw-bg-blue-500 tw-rounded-full tw-flex tw-items-center tw-justify-center tw-shadow-lg">
+                <span className="tw-text-white tw-text-6xl">🎨</span>
+              </div>
+            </div>
+            <div className="tw-mt-6 tw-text-center">
+              <button className="tw-bg-blue-600 tw-text-white tw-px-8 tw-py-3 tw-rounded-lg tw-font-semibold tw-hover:tw-bg-blue-700 tw-transition-colors tw-shadow-md">
+                PNG でダウンロード
+              </button>
+            </div>
+          </div>
+
+          {/* カスタマイズパネル */}
+          <div className="tw-bg-white tw-rounded-2xl tw-shadow-xl tw-p-8">
+            <h2 className="tw-text-2xl tw-font-semibold tw-text-gray-800 tw-mb-6">
+              カスタマイズ
+            </h2>
+            
+            <div className="tw-space-y-8">
+              {/* 形状選択 */}
+              <div>
+                <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-3">
+                  形状
+                </label>
+                <div className="tw-grid tw-grid-cols-2 tw-gap-4">
+                  <button className="tw-p-4 tw-border-2 tw-border-blue-500 tw-bg-blue-50 tw-rounded-lg tw-flex tw-flex-col tw-items-center tw-gap-2">
+                    <div className="tw-w-12 tw-h-12 tw-bg-blue-500 tw-rounded-full"></div>
+                    <span className="tw-text-sm tw-font-medium">円形</span>
+                  </button>
+                  <button className="tw-p-4 tw-border-2 tw-border-gray-200 tw-bg-gray-50 tw-rounded-lg tw-flex tw-flex-col tw-items-center tw-gap-2 tw-hover:tw-border-blue-300">
+                    <div className="tw-w-12 tw-h-12 tw-bg-gray-400 tw-rounded-md"></div>
+                    <span className="tw-text-sm tw-font-medium">四角形</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* サイズ調整 */}
+              <div>
+                <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-3">
+                  サイズ: 192px
+                </label>
+                <input 
+                  type="range" 
+                  min="60" 
+                  max="300" 
+                  defaultValue="192"
+                  className="tw-w-full tw-h-2 tw-bg-gray-200 tw-rounded-lg tw-appearance-none tw-cursor-pointer"
+                />
+              </div>
+
+              {/* 背景色 */}
+              <div>
+                <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-3">
+                  背景色
+                </label>
+                <div className="tw-flex tw-items-center tw-gap-4">
+                  <input 
+                    type="color" 
+                    defaultValue="#3b82f6"
+                    className="tw-w-16 tw-h-12 tw-border tw-border-gray-300 tw-rounded-lg tw-cursor-pointer"
+                  />
+                  <span className="tw-text-gray-600">#3b82f6</span>
+                </div>
+              </div>
+
+              {/* 画像アップロード */}
+              <div>
+                <label className="tw-block tw-text-sm tw-font-medium tw-text-gray-700 tw-mb-3">
+                  画像アップロード
+                </label>
+                <div className="tw-border-2 tw-border-dashed tw-border-gray-300 tw-rounded-lg tw-p-8 tw-text-center tw-hover:tw-border-blue-400 tw-transition-colors">
+                  <div className="tw-text-gray-400 tw-mb-2">
+                    <svg className="tw-mx-auto tw-h-12 tw-w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <p className="tw-text-sm tw-text-gray-600 tw-mb-2">
+                    画像をドラッグ&ドロップ
+                  </p>
+                  <p className="tw-text-xs tw-text-gray-400">
+                    または
+                  </p>
+                  <button className="tw-mt-2 tw-text-blue-600 tw-text-sm tw-font-medium tw-hover:tw-underline">
+                    ファイルを選択
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-
-      {/* アイコンプレビューエリア - 灰色背景で視認性向上 */}
-      <div className="tw-flex tw-justify-center tw-p-8 tw-bg-gray-100 tw-rounded-lg">
-        <IconPreview
-          imageUrl={uploadedImageUrl || DEFAULT_IMAGE_URL} // アップロード画像 or デフォルト画像
-          shape={shape}
-          size={size}
-          backgroundColor={bgColor}
-          onDownload={() => console.log('PNG ダウンロード開始 - サイズ:', size, '形状:', shape, '背景色:', bgColor)}
-        />
-      </div>
-
-      {/* 画像アップロード機能 */}
-      <ImageUploader
-        onImageUpload={handleImageUpload}
-        onError={handleImageUploadError}
-        currentImageName={uploadedImageName}
-      />
-      
-      {/* 現在の設定値表示エリア（デバッグ・確認用） */}
-      <div className="tw-text-center tw-p-4 tw-bg-yellow-100 tw-rounded">
-        <h4 className="tw-font-bold">現在の設定</h4>
-        <p>画像: {uploadedImageName || 'デフォルト画像'}</p>
-        <p>形状: {shape === "circle" ? "丸●" : "□四角"}</p>
-        <p>サイズ: {size}px</p>
-        <p>背景色: {bgColor}</p>
-      </div>
-
-      {/* サイズ調整コントロール */}
-      <div className="tw-text-center tw-space-y-4">
-        <h3 className="tw-text-lg tw-font-bold">サイズ調整</h3>
-        <div className="tw-flex tw-justify-center tw-gap-4">
-          <button
-            className="tw-px-6 tw-py-3 tw-bg-blue-500 tw-text-white tw-rounded-lg tw-font-bold hover:tw-bg-blue-600 tw-transition-colors"
-            onClick={decreaseSize}
-            disabled={size <= 60} // 最小サイズに達した場合は無効化
-            title="アイコンサイズを20px小さくする（最小60px）"
-          >
-            小さく
-          </button>
-          <button
-            className="tw-px-6 tw-py-3 tw-bg-blue-500 tw-text-white tw-rounded-lg tw-font-bold hover:tw-bg-blue-600 tw-transition-colors"
-            onClick={increaseSize}
-            disabled={size >= 300} // 最大サイズに達した場合は無効化
-            title="アイコンサイズを20px大きくする（最大300px）"
-          >
-            大きく
-          </button>
-        </div>
-        <p className="tw-text-sm tw-text-gray-600">現在のサイズ: {size}px（範囲: 60-300px）</p>
-      </div>
-
-      {/* 形状選択コンポーネント */}
-      <ShapeSelector
-        selectedShape={shape}
-        onChangeShape={setShape}
-      />
-
-      {/* 背景色選択コントロール */}
-      <div className="tw-text-center tw-space-y-4">
-        <h3 className="tw-text-lg tw-font-bold">背景色</h3>
-        <div className="tw-flex tw-justify-center">
-          <input
-            type="color"
-            value={bgColor}
-            onChange={(e) => setBgColor(e.target.value)}
-            className="tw-w-16 tw-h-16 tw-rounded-lg tw-border-2 tw-border-gray-300 tw-cursor-pointer"
-            title="アイコンの背景色を選択"
-          />
-        </div>
-        <p className="tw-text-sm tw-text-gray-600">選択中: {bgColor}</p>
       </div>
     </div>
   );
-};
+}
 
-export default TestPage;
+export default App;
