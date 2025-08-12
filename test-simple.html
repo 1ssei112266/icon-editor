@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アイコンエディター テスト</title>
+    
+    <!-- ビルドされたCSSを読み込み -->
+    <link rel="stylesheet" href="./dist/assets/index-CXaYLNdP.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        
+        .error-box {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            color: #1565c0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>WordPress アイコンエディター テスト</h1>
+    
+    <div class="info-box">
+        <strong>WordPressショートコード相当:</strong><br>
+        <code>[icon_editor image="https://picsum.photos/256/256?random=1"]</code>
+    </div>
+    
+    <div class="container">
+        <h2>アイコンエディター</h2>
+        <div id="root">
+            <div class="error-box" id="loading-indicator">
+                読み込み中... JavaScriptファイルを確認しています
+            </div>
+        </div>
+    </div>
+
+    <!-- WordPress環境で設定される変数をシミュレーション -->
+    <script>
+        console.log('設定開始...');
+        
+        // WordPressショートコードで渡される画像URL
+        window.ICON_EDITOR_CONFIG = {
+            baseImageUrl: 'https://picsum.photos/256/256?random=1'
+        };
+        
+        console.log('Config設定完了:', window.ICON_EDITOR_CONFIG);
+        
+        // エラーハンドリング
+        window.addEventListener('error', function(e) {
+            console.error('JavaScript エラー:', e.error);
+            document.getElementById('loading-indicator').innerHTML = 
+                '<strong>エラー:</strong> ' + e.error.message + '<br>' +
+                '<small>コンソールを確認してください (F12)</small>';
+        });
+        
+        // 5秒後にタイムアウトチェック
+        setTimeout(function() {
+            const rootElement = document.getElementById('root');
+            if (rootElement && rootElement.innerHTML.includes('読み込み中')) {
+                document.getElementById('loading-indicator').innerHTML = 
+                    '<strong>タイムアウト:</strong> JavaScriptファイルの読み込みに失敗<br>' +
+                    '<small>dist/assets/ フォルダのJSファイルを確認してください</small>';
+            }
+        }, 5000);
+    </script>
+    
+    <!-- Reactアプリのスクリプト -->
+    <script type="module" src="./dist/assets/index-67TSy4IH.js"></script>
+    
+    <script>
+        // デバッグ用ログ
+        console.log('HTMLファイル読み込み完了');
+        console.log('現在のURL:', window.location.href);
+        console.log('Config確認:', window.ICON_EDITOR_CONFIG);
+    </script>
+    
+    <hr>
+    <h3>トラブルシューティング</h3>
+    <ol>
+        <li><strong>白画面の場合:</strong> ブラウザのコンソール(F12)でJavaScriptエラーを確認</li>
+        <li><strong>ファイルが見つからない場合:</strong> dist/assets/ フォルダの存在を確認</li>
+        <li><strong>CORS エラーの場合:</strong> ローカルサーバー(python -m http.server)で実行</li>
+    </ol>
+    
+    <h3>期待される動作</h3>
+    <ul>
+        <li>✅ カラフルなアイコンエディターが表示される</li>
+        <li>✅ Picsum画像(256x256)がプレビューに表示される</li>
+        <li>✅ 色・形状・サイズ変更ボタンが動作する</li>
+        <li>✅ ダウンロードボタンでPNG保存できる</li>
+    </ul>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WordPress アイコンエディター テスト</title>
+</head>
+<body>
+    <h1>WordPress環境シミュレーション</h1>
+    <p>以下はWordPressショートコード [icon_editor image="..."] と同等の動作です</p>
+    
+    <!-- WordPress ショートコードの出力をシミュレーション -->
+    <div id="icon-editor-container" style="width: 100%; height: 600px;">
+        <link rel="stylesheet" href="./dist/assets/index-CXaYLNdP.css">
+        <div id="root"></div>
+        <script>
+            // WordPressショートコードで設定される値をシミュレーション
+            window.ICON_EDITOR_CONFIG = {
+                baseImageUrl: 'https://picsum.photos/256/256?random=1'
+            };
+        </script>
+        <script type="module" src="./dist/assets/index-67TSy4IH.js"></script>
+    </div>
+
+    <hr>
+    
+    <h2>異なる画像でのテスト</h2>
+    
+    <!-- 企業ロゴっぽい画像でテスト -->
+    <div id="icon-editor-container-2" style="width: 100%; height: 600px;">
+        <link rel="stylesheet" href="./dist/assets/index-CXaYLNdP.css">
+        <div id="root2"></div>
+        <script>
+            // 2つ目のエディター用設定
+            window.ICON_EDITOR_CONFIG_2 = {
+                baseImageUrl: 'https://picsum.photos/256/256?random=5'
+            };
+        </script>
+        <script>
+            // 2つ目のエディターを別のrootに描画
+            setTimeout(() => {
+                window.ICON_EDITOR_CONFIG = window.ICON_EDITOR_CONFIG_2;
+                // ここでReactアプリを再度マウントする処理が必要
+                // 実際のWordPressでは各ショートコードが独立して動作
+            }, 100);
+        </script>
+    </div>
+
+    <hr>
+    
+    <h2>使用方法説明</h2>
+    <p><strong>WordPress実装時:</strong></p>
+    <code>[icon_editor image="https://yoursite.com/logo.png"]</code>
+    
+    <p><strong>異なるページで:</strong></p>
+    <code>[icon_editor image="https://yoursite.com/different-image.png"]</code>
+</body>
+</html>
