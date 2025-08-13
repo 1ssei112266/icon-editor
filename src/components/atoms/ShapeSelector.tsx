@@ -1,46 +1,43 @@
-/**
- * ShapeSelectorコンポーネントのProps型定義
- */
+import React from 'react';
+import { Button, Group, Stack, Text } from '@mantine/core';
+
 interface ShapeSelectorProps {
-  selectedShape: 'circle' | 'square';  /** 現在選択されている形状 */
-  onChangeShape: (shape: 'circle' | 'square') => void;  /** 形状変更時に呼ばれるコールバック関数 */
+  /** 現在選択されている形状 */
+  shape: 'circle' | 'square';
+  /** 形状変更時のコールバック */
+  onShapeChange: (shape: 'circle' | 'square') => void;
 }
 
 /**
  * 形状選択コンポーネント（Atom）
- * 丸・角の2つのボタンで形状を切り替える
+ * circle（円形）またはsquare（角丸四角）を選択
  */
-const ShapeSelector: React.FC<ShapeSelectorProps> = ({ selectedShape, onChangeShape }) => {
+export const ShapeSelector: React.FC<ShapeSelectorProps> = ({
+  shape,
+  onShapeChange
+}) => {
   return (
-    <div className="tw-text-center tw-space-y-4">
-      <h3 className="tw-text-lg tw-font-bold">形状選択</h3>
-      <div className="tw-flex tw-justify-center tw-gap-4">
-        {/* 丸ボタン */}
-        <button
-          className={`tw-px-6 tw-py-3 tw-rounded-lg tw-font-bold tw-transition-colors ${
-            selectedShape === "circle"
-              ? "tw-bg-blue-500 tw-text-white"
-              : "tw-bg-gray-200 tw-text-gray-700 hover:tw-bg-gray-300"
-          }`}
-          onClick={() => onChangeShape("circle")}
-        >
-          まる●
-        </button>
-        
-        {/* 四角ボタン */}
-        <button
-          className={`tw-px-6 tw-py-3 tw-rounded-lg tw-font-bold tw-transition-colors ${
-            selectedShape === "square"
-              ? "tw-bg-blue-500 tw-text-white"
-              : "tw-bg-gray-200 tw-text-gray-700 hover:tw-bg-gray-300"
-          }`}
-          onClick={() => onChangeShape("square")}
-        >
-          □しかく
-        </button>
-      </div>
-    </div>
+    <Stack gap="xs">
+      <Text size="sm" fw={600} c="dark" ta="center">形状</Text>
+      <Group gap="sm" justify="center">
+        {(['circle', 'square'] as const).map((shapeOption) => (
+          <Button
+            key={shapeOption}
+            variant={shape === shapeOption ? 'filled' : 'light'}
+            color={shape === shapeOption ? 'blue' : 'gray'}
+            radius="lg"
+            size="sm"
+            onClick={() => onShapeChange(shapeOption)}
+            style={{
+              fontWeight: 500,
+              border: '2px solid',
+              borderColor: shape === shapeOption ? '#3b82f6' : '#d1d5db',
+            }}
+          >
+            {shapeOption === 'circle' ? 'まる●' : '□しかく'}
+          </Button>
+        ))}
+      </Group>
+    </Stack>
   );
 };
-
-export default ShapeSelector;
