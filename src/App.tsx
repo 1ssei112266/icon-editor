@@ -186,7 +186,8 @@ function App() {
       const canvas = await html2canvas(iconContainer, {
         useCORS: true,
         allowTaint: true,
-        logging: false,
+        logging: true, // デバッグ用にログを有効化
+        foreignObjectRendering: true, // 外部オブジェクトレンダリング有効化
         // scale: 2, // 高解像度出力（html2canvasの型定義にないためコメントアウト）
         // background: null
       });
@@ -271,16 +272,17 @@ function App() {
                           画像を読み込めません
                         </Alert>
                       ) : (
-                        <Box
+                        <img
+                          src={baseImageUrl}
+                          alt="アイコン画像"
                           style={{
                             width: imageSize,
                             height: imageSize,
-                            backgroundImage: `url(${baseImageUrl})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
+                            objectFit: 'cover',
                             borderRadius: '0px',
                             transition: 'all 0.3s ease'
                           }}
+                          crossOrigin="anonymous"
                         />
                       )}
                     </Box>
@@ -353,16 +355,17 @@ function App() {
                     
                     {/* アイコンコンテナ（編集時） */}
                     <Box data-icon-container style={getIconContainerStyle(true)}>
-                      <Box
+                      <img
+                        src={baseImageUrl}
+                        alt="アイコン画像"
                         style={{
                           width: imageSize,
                           height: imageSize,
-                          backgroundImage: `url(${baseImageUrl})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
+                          objectFit: 'cover',
                           borderRadius: '0px',
                           transition: 'all 0.3s ease'
                         }}
+                        crossOrigin="anonymous"
                       />
                     </Box>
                   </Paper>
