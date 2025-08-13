@@ -182,15 +182,48 @@ function App() {
         throw new Error('アイコンコンテナが見つかりません');
       }
 
-      // html2canvasで画像生成
-      const canvas = await html2canvas(iconContainer, {
-        useCORS: true,
-        allowTaint: true,
-        logging: true, // デバッグ用にログを有効化
-        foreignObjectRendering: true, // 外部オブジェクトレンダリング有効化
-        // scale: 2, // 高解像度出力（html2canvasの型定義にないためコメントアウト）
-        // background: null
-      });
+      // 画像要素を取得して読み込み完了を確認
+      const imgElement = iconContainer.querySelector('img') as HTMLImageElement;
+      if (!imgElement) {
+        throw new Error('画像要素が見つかりません');
+      }
+
+      // 画像が読み込まれるまで待機
+      if (!imgElement.complete) {
+        await new Promise((resolve, reject) => {
+          imgElement.onload = resolve;
+          imgElement.onerror = reject;
+          // タイムアウト設定（10秒）
+          setTimeout(() => reject(new Error('画像読み込みタイムアウト')), 10000);
+        });
+      }
+
+      // 直接Canvas APIを使用して画像を描画
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        throw new Error('Canvas context取得に失敗しました');
+      }
+
+      // キャンバスサイズを設定
+      canvas.width = CONTAINER_SIZE;
+      canvas.height = CONTAINER_SIZE;
+
+      // 背景色を描画
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, CONTAINER_SIZE, CONTAINER_SIZE);
+
+      // 形状に応じてクリッピング
+      if (shape === 'circle') {
+        ctx.beginPath();
+        ctx.arc(CONTAINER_SIZE / 2, CONTAINER_SIZE / 2, CONTAINER_SIZE / 2, 0, Math.PI * 2);
+        ctx.clip();
+      }
+
+      // 画像を描画
+      const imgX = (CONTAINER_SIZE - imageSize) / 2;
+      const imgY = (CONTAINER_SIZE - imageSize) / 2;
+      ctx.drawImage(imgElement, imgX, imgY, imageSize, imageSize);
 
       // ダウンロード実行
       const link = document.createElement('a');
