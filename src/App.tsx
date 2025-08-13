@@ -182,21 +182,18 @@ function App() {
         throw new Error('アイコンコンテナが見つかりません');
       }
 
-      // 画像要素を取得して読み込み完了を確認
-      const imgElement = iconContainer.querySelector('img') as HTMLImageElement;
-      if (!imgElement) {
-        throw new Error('画像要素が見つかりません');
-      }
-
-      // 画像が読み込まれるまで待機
-      if (!imgElement.complete) {
-        await new Promise((resolve, reject) => {
-          imgElement.onload = resolve;
-          imgElement.onerror = reject;
-          // タイムアウト設定（10秒）
-          setTimeout(() => reject(new Error('画像読み込みタイムアウト')), 10000);
-        });
-      }
+      // 新しい画像をCORS対応で読み込み
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      // 画像読み込み完了を待機
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error('画像読み込みに失敗しました'));
+        // タイムアウト設定（10秒）
+        setTimeout(() => reject(new Error('画像読み込みタイムアウト')), 10000);
+        img.src = baseImageUrl;
+      });
 
       // 直接Canvas APIを使用して画像を描画
       const canvas = document.createElement('canvas');
@@ -223,7 +220,7 @@ function App() {
       // 画像を描画
       const imgX = (CONTAINER_SIZE - imageSize) / 2;
       const imgY = (CONTAINER_SIZE - imageSize) / 2;
-      ctx.drawImage(imgElement, imgX, imgY, imageSize, imageSize);
+      ctx.drawImage(img, imgX, imgY, imageSize, imageSize);
 
       // ダウンロード実行
       const link = document.createElement('a');
