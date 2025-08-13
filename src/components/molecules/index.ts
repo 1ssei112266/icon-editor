@@ -1,2 +1,2 @@
-// Molecules - Atomsを組み合わせたコンポーネント
-// 今後追加予定
+export { IconPreview } from './IconPreview';
+export { CustomizePanel } from './CustomizePanel';

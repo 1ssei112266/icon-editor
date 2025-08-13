@@ -1,13 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import '@mantine/core/styles.css';
-import html2canvas from 'html2canvas';
 import {
   MantineProvider,
   Container,
   Title,
-  Text,
   Stack,
-  Group,
   Button,
   Paper,
   Center,
@@ -15,41 +12,17 @@ import {
   ActionIcon,
   Transition,
   ColorPicker,
-  Loader,
   Alert,
+  Group,
 } from '@mantine/core';
-import { IconX, IconDownload, IconAlertCircle, IconCheck } from '@tabler/icons-react';
+import { IconX, IconAlertCircle, IconCheck } from '@tabler/icons-react';
 
-// =============================================================================
-// 定数定義
-// =============================================================================
+// コンポーネントとフック
+import { IconPreview, CustomizePanel, DownloadButton } from './components';
+import { useIconDownload } from './hooks/useIconDownload';
 
-/** アイコンコンテナの固定サイズ（256px） */
-const CONTAINER_SIZE = 256;
-
-/** サイズ調整の範囲 */
-const SIZE_LIMITS = {
-  MIN: 10,    // 最小10%
-  MAX: 150,   // 最大150%
-  STEP: 5     // 5%刻み
-} as const;
-
-/** モバイル判定の閾値 */
-const MOBILE_BREAKPOINT = 768;
-
-
-/** 背景色のプリセット */
-const COLOR_SWATCHES = [
-  { color: '#a8dadc', name: 'ライトブルー' },
-  { color: '#f1c0e8', name: 'ピンク' },
-  { color: '#ffeb3b', name: 'イエロー' },
-  { color: '#ff9800', name: 'オレンジ' },
-  { color: '#2196f3', name: 'ブルー' },
-  { color: '#4caf50', name: 'グリーン' },
-  { color: '#f44336', name: 'レッド' },
-  { color: '#ffffff', name: 'ホワイト' },
-  { color: '#000000', name: 'ブラック' },
-] as const;
+// 定数とユーティリティ
+import { SIZE_LIMITS, MOBILE_BREAKPOINT } from './constants';
 
 // =============================================================================
 // スタイル定義
@@ -72,12 +45,6 @@ const getPreviewAreaStyle = (isMobile: boolean) => ({
   alignItems: 'center' as const,
   justifyContent: 'center' as const,
 });
-
-/** カスタマイズパネルの背景スタイル */
-const customizePanelStyle = {
-  background: '#fef3c7',
-  border: '2px solid #fde68a',
-};
 
 // =============================================================================
 // メインコンポーネント
@@ -106,7 +73,6 @@ function App() {
   /** モバイル表示かどうかの判定 */
   const [isMobile, setIsMobile] = useState<boolean>(window.innerWidth <= MOBILE_BREAKPOINT);
   
-
   /** ダウンロード処理中の状態 */
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   
@@ -152,11 +118,8 @@ function App() {
   /** WordPress ショートコードから画像URLを取得（フォールバック付き）（メモ化） */
   const baseImageUrl = useMemo(() => 
     (window as { ICON_EDITOR_CONFIG?: { baseImageUrl: string } }).ICON_EDITOR_CONFIG?.baseImageUrl 
-    || 'https://picsum.photos/256/256?random=1'
+    || '/dummy-icon.png'
   , []);
-  
-  /** 実際の画像サイズ（ピクセル値）（メモ化） */
-  const imageSize = useMemo(() => Math.round((CONTAINER_SIZE * imageScale) / 100), [imageScale]);
 
   // ---------------------------------------------------------------------------
   // イベントハンドラー
@@ -169,98 +132,30 @@ function App() {
     );
   }, []);
 
-  /** PNG画像ダウンロード処理（メモ化） */
-  const downloadIcon = useCallback(async () => {
-    if (isDownloading) return; // 重複処理防止
-    
+  /** ダウンロード機能フック */
+  const { downloadIcon } = useIconDownload({
+    shape,
+    imageScale,
+    bgColor,
+    baseImageUrl,
+    showNotification
+  });
+
+  /** ダウンロード処理のラッパー */
+  const handleDownload = useCallback(async () => {
+    if (isDownloading) return;
     setIsDownloading(true);
-    console.log('ダウンロード開始:', { shape, imageScale, bgColor, baseImageUrl });
-    
     try {
-      const iconContainer = document.querySelector('[data-icon-container]') as HTMLElement;
-      if (!iconContainer) {
-        throw new Error('アイコンコンテナが見つかりません');
-      }
-
-      // 新しい画像をCORS対応で読み込み
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      
-      // 画像読み込み完了を待機
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = () => reject(new Error('画像読み込みに失敗しました'));
-        // タイムアウト設定（10秒）
-        setTimeout(() => reject(new Error('画像読み込みタイムアウト')), 10000);
-        img.src = baseImageUrl;
-      });
-
-      // 直接Canvas APIを使用して画像を描画
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        throw new Error('Canvas context取得に失敗しました');
-      }
-
-      // キャンバスサイズを設定
-      canvas.width = CONTAINER_SIZE;
-      canvas.height = CONTAINER_SIZE;
-
-      // 背景色を描画
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, CONTAINER_SIZE, CONTAINER_SIZE);
-
-      // 形状に応じてクリッピング
-      if (shape === 'circle') {
-        ctx.beginPath();
-        ctx.arc(CONTAINER_SIZE / 2, CONTAINER_SIZE / 2, CONTAINER_SIZE / 2, 0, Math.PI * 2);
-        ctx.clip();
-      }
-
-      // 画像を描画
-      const imgX = (CONTAINER_SIZE - imageSize) / 2;
-      const imgY = (CONTAINER_SIZE - imageSize) / 2;
-      ctx.drawImage(img, imgX, imgY, imageSize, imageSize);
-
-      // ダウンロード実行
-      const link = document.createElement('a');
-      link.download = `custom-icon-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      // showNotification('success', 'アイコンのダウンロードが完了しました');
-      console.log('ダウンロード完了');
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'ダウンロードに失敗しました';
-      showNotification('error', errorMessage);
-      console.error('ダウンロードエラー:', error);
+      await downloadIcon();
     } finally {
       setIsDownloading(false);
     }
-  }, [isDownloading, shape, imageScale, bgColor, baseImageUrl, showNotification]);
+  }, [downloadIcon, isDownloading]);
 
   // ---------------------------------------------------------------------------
   // レンダリング用ヘルパー
   // ---------------------------------------------------------------------------
   
-  /** アイコンコンテナのスタイル（初期 / 編集時で異なる）（メモ化） */
-  const getIconContainerStyle = useMemo(() => (isEditing: boolean) => ({
-    width: CONTAINER_SIZE,
-    height: CONTAINER_SIZE,
-    backgroundColor: isEditing ? bgColor : 'transparent',
-    borderRadius: isEditing && shape === 'circle' ? '50%' : '16px',
-    display: 'flex',
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-    boxShadow: isEditing ? '0 10px 20px rgba(0,0,0,0.15)' : 'none',
-    border: isEditing ? '3px solid white' : 'none',
-    transition: 'all 0.3s ease',
-    overflow: 'hidden' as const,
-  }), [bgColor, shape]);
-
   /** レスポンシブレイアウト用スタイル（メモ化） */
   const getResponsiveLayoutStyle = useMemo((): React.CSSProperties => ({
     display: 'flex',
@@ -289,33 +184,14 @@ function App() {
                 {/* メインプレビューエリア */}
                 <Box style={{ position: 'relative' }}>
                   <Paper p="xl" withBorder radius="xl" shadow="xl" style={getPreviewAreaStyle(isMobile)}>
-                    
-                    {/* アイコンコンテナ（初期状態） */}
-                    <Box data-icon-container style={getIconContainerStyle(false)}>
-                      {imageError ? (
-                        <Alert 
-                          icon={<IconAlertCircle size="1rem" />} 
-                          title="画像読み込みエラー" 
-                          color="orange"
-                          style={{ width: imageSize, height: imageSize, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          画像を読み込めません
-                        </Alert>
-                      ) : (
-                        <img
-                          src={baseImageUrl}
-                          alt="アイコン画像"
-                          style={{
-                            width: imageSize,
-                            height: imageSize,
-                            objectFit: 'cover',
-                            borderRadius: '0px',
-                            transition: 'all 0.3s ease'
-                          }}
-                          crossOrigin="anonymous"
-                        />
-                      )}
-                    </Box>
+                    <IconPreview 
+                      imageUrl={baseImageUrl}
+                      shape={shape}
+                      imageScale={imageScale}
+                      bgColor={bgColor}
+                      isEditing={false}
+                      hasImageError={imageError}
+                    />
                   </Paper>
 
                   {/* カスタマイズ開始ボタン（4色パレット風） */}
@@ -383,41 +259,22 @@ function App() {
                       ...getPreviewAreaStyle(isMobile)
                     }}>
                     
-                    {/* アイコンコンテナ（編集時） */}
-                    <Box data-icon-container style={getIconContainerStyle(true)}>
-                      <img
-                        src={baseImageUrl}
-                        alt="アイコン画像"
-                        style={{
-                          width: imageSize,
-                          height: imageSize,
-                          objectFit: 'cover',
-                          borderRadius: '0px',
-                          transition: 'all 0.3s ease'
-                        }}
-                        crossOrigin="anonymous"
-                      />
-                    </Box>
+                    <IconPreview 
+                      imageUrl={baseImageUrl}
+                      shape={shape}
+                      imageScale={imageScale}
+                      bgColor={bgColor}
+                      isEditing={true}
+                      hasImageError={imageError}
+                    />
                   </Paper>
 
                   {/* ダウンロードボタン */}
-                  <Button 
-                    leftSection={isDownloading ? <Loader size={20} color="white" /> : <IconDownload size={20} />}
-                    size="lg" 
-                    radius="xl"
-                    variant="gradient"
-                    gradient={{ from: 'cyan', to: 'blue' }}
-                    onClick={downloadIcon}
-                    loading={isDownloading}
-                    disabled={isDownloading || imageError}
-                    style={{
-                      fontSize: '1.1rem',
-                      padding: '12px 24px',
-                      fontWeight: 600
-                    }}
-                  >
-                    {isDownloading ? 'ダウンロード中...' : 'アイコン画像ダウンロード'}
-                  </Button>
+                  <DownloadButton 
+                    isDownloading={isDownloading}
+                    hasError={imageError}
+                    onDownload={handleDownload}
+                  />
                 </Box>
 
                 {/* 右側/下部：カスタマイズパネル */}
@@ -432,121 +289,15 @@ function App() {
                 }}>
                   <Title order={2} c="white" size={isMobile ? "1.5rem" : "2rem"} ta="center">カスタマイズ</Title>
                   
-                  <Paper p="lg" withBorder radius="xl" shadow="md" style={customizePanelStyle}>
-                    <Stack gap="md">
-                      
-                      {/* 形状選択 */}
-                      <Stack gap="xs">
-                        <Text size="sm" fw={600} c="dark" ta="center">形状</Text>
-                        <Group gap="sm" justify="center">
-                          {(['circle', 'square'] as const).map((shapeOption) => (
-                            <Button
-                              key={shapeOption}
-                              variant={shape === shapeOption ? 'filled' : 'light'}
-                              color={shape === shapeOption ? 'blue' : 'gray'}
-                              radius="lg"
-                              size="sm"
-                              onClick={() => setShape(shapeOption)}
-                              style={{
-                                fontWeight: 500,
-                                border: '2px solid',
-                                borderColor: shape === shapeOption ? '#3b82f6' : '#d1d5db',
-                              }}
-                            >
-                              {shapeOption === 'circle' ? 'まる●' : '□しかく'}
-                            </Button>
-                          ))}
-                        </Group>
-                      </Stack>
-
-                      {/* サイズ調整 */}
-                      <Stack gap="xs">
-                        <Text size="sm" fw={600} c="dark" ta="center">サイズ</Text>
-                        <Group gap="sm" justify="center" align="center">
-                          <Button
-                            variant="light"
-                            color="blue.7"
-                            radius="md"
-                            size="xs"
-                            onClick={() => handleSizeChange(-SIZE_LIMITS.STEP)}
-                            disabled={imageScale <= SIZE_LIMITS.MIN}
-                            style={{ fontWeight: 500 }}
-                          >
-                            小さく
-                          </Button>
-                          <Text size="md" fw={700} c="dark" style={{ minWidth: '50px', textAlign: 'center' }}>
-                            {imageScale}%
-                          </Text>
-                          <Button
-                            variant="light"
-                            color="blue.7"
-                            radius="md"
-                            size="xs"
-                            onClick={() => handleSizeChange(SIZE_LIMITS.STEP)}
-                            disabled={imageScale >= SIZE_LIMITS.MAX}
-                            style={{ fontWeight: 500 }}
-                          >
-                            大きく
-                          </Button>
-                        </Group>
-                      </Stack>
-
-                      {/* カラーパレット */}
-                      <Stack gap="xs">
-                        <Text size="sm" fw={600} c="dark" ta="center">背景色</Text>
-                        <Group gap="xs" justify="center">
-                          {COLOR_SWATCHES.map((swatch, index) => (
-                            <Box
-                              key={index}
-                              style={{
-                                width: 28,
-                                height: 28,
-                                backgroundColor: swatch.color,
-                                borderRadius: '50%',
-                                border: `3px solid ${bgColor === swatch.color ? '#374151' : 
-                                  swatch.color === '#ffffff' ? '#9ca3af' : 'white'}`,
-                                cursor: 'pointer',
-                                transition: 'all 0.2s ease'
-                              }}
-                              onClick={() => setBgColor(swatch.color)}
-                              onMouseEnter={(e) => {
-                                if (bgColor !== swatch.color) {
-                                  e.currentTarget.style.transform = 'scale(1.1)';
-                                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                                }
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.transform = 'scale(1)';
-                                e.currentTarget.style.boxShadow = 'none';
-                              }}
-                            />
-                          ))}
-                          
-                          {/* カスタムカラーボタン */}
-                          <Box
-                            style={{
-                              width: 28,
-                              height: 28,
-                              background: 'linear-gradient(45deg, #ff0000, #ff8800, #ffff00, #88ff00, #00ff00, #00ff88, #00ffff, #0088ff, #0000ff, #8800ff, #ff00ff, #ff0088)',
-                              borderRadius: '50%',
-                              border: `3px solid ${!COLOR_SWATCHES.find(s => s.color === bgColor) ? 'white' : '#374151'}`,
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease'
-                            }}
-                            onClick={() => setIsColorPickerOpen(true)}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.transform = 'scale(1.1)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.transform = 'scale(1)';
-                              e.currentTarget.style.boxShadow = 'none';
-                            }}
-                          />
-                        </Group>
-                      </Stack>
-                    </Stack>
-                  </Paper>
+                  <CustomizePanel 
+                    shape={shape}
+                    imageScale={imageScale}
+                    bgColor={bgColor}
+                    onShapeChange={setShape}
+                    onSizeChange={handleSizeChange}
+                    onColorChange={setBgColor}
+                    onOpenCustomPicker={() => setIsColorPickerOpen(true)}
+                  />
 
                   {/* ツール終了ボタン */}
                   <Button
@@ -594,7 +345,7 @@ function App() {
               }}
             >
               <Group justify="space-between" mb="lg">
-                <Text size="lg" fw={700}>色を選択</Text>
+                <Title order={3}>色を選択</Title>
                 <ActionIcon
                   size="lg"
                   variant="subtle"

@@ -1,4 +1,4 @@
-// Atoms - 最小単位のUIコンポーネント
-export { default as IconPreview } from './IconPreview';
-export { default as ShapeSelector } from './ShapeSelector';
-export { default as ImageUploader } from './ImageUploader';
+export { ShapeSelector } from './ShapeSelector';
+export { SizeControl } from './SizeControl';
+export { ColorPalette } from './ColorPalette';
+export { DownloadButton } from './DownloadButton';
