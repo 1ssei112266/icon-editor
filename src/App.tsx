@@ -200,7 +200,7 @@ function App() {
       link.click();
       document.body.removeChild(link);
       
-      showNotification('success', 'アイコンのダウンロードが完了しました');
+      // showNotification('success', 'アイコンのダウンロードが完了しました');
       console.log('ダウンロード完了');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'ダウンロードに失敗しました';
