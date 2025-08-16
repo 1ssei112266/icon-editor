@@ -50,7 +50,19 @@ const getPreviewAreaStyle = (isMobile: boolean) => ({
 // メインコンポーネント
 // =============================================================================
 
-function App() {
+// インスタンス設定の型定義
+interface InstanceConfig {
+  baseImageUrl?: string;
+  pluginUrl?: string;
+  instanceId?: string;
+}
+
+// Appコンポーネントのprops型定義
+interface AppProps {
+  instanceConfig?: InstanceConfig;
+}
+
+function App({ instanceConfig }: AppProps = {}) {
   // ---------------------------------------------------------------------------
   // 状態管理
   // ---------------------------------------------------------------------------
@@ -121,12 +133,21 @@ function App() {
   // ---------------------------------------------------------------------------
 
   /** WordPress ショートコードから画像URLを取得（フォールバック付き）（メモ化） */
-  const baseImageUrl = useMemo(
-    () =>
-      (window as { ICON_EDITOR_CONFIG?: { baseImageUrl: string } })
-        .ICON_EDITOR_CONFIG?.baseImageUrl || "/dummy-icon.png",
-    []
-  );
+  const baseImageUrl = useMemo(() => {
+    // インスタンス設定が直接渡された場合（新方式）
+    if (instanceConfig?.baseImageUrl) {
+      return instanceConfig.baseImageUrl;
+    }
+    
+    // 旧方式での後方互換性
+    const legacyConfig = (window as { ICON_EDITOR_CONFIG?: { baseImageUrl: string } }).ICON_EDITOR_CONFIG;
+    if (legacyConfig?.baseImageUrl) {
+      return legacyConfig.baseImageUrl;
+    }
+    
+    // デフォルト画像
+    return "/dummy-icon.png";
+  }, [instanceConfig?.baseImageUrl]);
 
   // ---------------------------------------------------------------------------
   // イベントハンドラー
