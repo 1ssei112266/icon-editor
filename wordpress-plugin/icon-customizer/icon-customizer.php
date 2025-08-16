@@ -27,6 +27,7 @@ class IconCustomizer {
     public function __construct() {
         add_action('init', array($this, 'init'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_scripts'));
+        add_action('enqueue_block_editor_assets', array($this, 'enqueue_editor_assets'));
         register_activation_hook(__FILE__, array($this, 'activate'));
         register_deactivation_hook(__FILE__, array($this, 'deactivate'));
     }
@@ -37,6 +38,9 @@ class IconCustomizer {
     public function init() {
         // ショートコード登録
         add_shortcode('icon_customizer', array($this, 'render_shortcode'));
+        
+        // ブロックエディター用ショートコードプレビュー
+        add_filter('render_block', array($this, 'render_shortcode_preview'), 10, 2);
     }
     
     /**
@@ -98,6 +102,43 @@ class IconCustomizer {
     public function activate() {
         // 必要に応じて初期設定を追加
         flush_rewrite_rules();
+    }
+    
+    /**
+     * ブロックエディター用アセットの読み込み
+     */
+    public function enqueue_editor_assets() {
+        wp_enqueue_script(
+            'icon-customizer-editor',
+            ICON_CUSTOMIZER_PLUGIN_URL . 'assets/editor.js',
+            array('wp-blocks', 'wp-element', 'wp-editor'),
+            ICON_CUSTOMIZER_VERSION,
+            true
+        );
+        
+        wp_enqueue_style(
+            'icon-customizer-editor-css',
+            ICON_CUSTOMIZER_PLUGIN_URL . 'assets/editor.css',
+            array(),
+            ICON_CUSTOMIZER_VERSION
+        );
+    }
+    
+    /**
+     * ショートコードプレビュー（ブロックエディター用）
+     */
+    public function render_shortcode_preview($block_content, $block) {
+        if (isset($block['blockName']) && $block['blockName'] === 'core/shortcode') {
+            if (strpos($block_content, '[icon_customizer') !== false) {
+                return '<div class="icon-customizer-preview">
+                    <div style="border: 2px dashed #ccc; padding: 20px; text-align: center; background: #f9f9f9;">
+                        <span style="color: #666;">📱 Icon Customizer</span><br>
+                        <small style="color: #999;">フロントエンドで表示されます</small>
+                    </div>
+                </div>' . $block_content;
+            }
+        }
+        return $block_content;
     }
     
     /**
