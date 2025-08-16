@@ -22,13 +22,13 @@ export const SizeControl: React.FC<SizeControlProps> = ({
       <Text size="sm" fw={600} c="dark" ta="center">サイズ</Text>
       <Group gap="sm" justify="center" align="center">
         <Button
-          variant="light"
-          color="blue.7"
+          variant="filled"
+          color="pink"
           radius="md"
           size="xs"
           onClick={() => onSizeChange(-SIZE_LIMITS.STEP)}
           disabled={size <= SIZE_LIMITS.MIN}
-          style={{ fontWeight: 500 }}
+          style={{ fontWeight: 500, backgroundColor: "#f8bbd9", color: "white" }}
         >
           小さく
         </Button>
@@ -36,13 +36,13 @@ export const SizeControl: React.FC<SizeControlProps> = ({
           {size}%
         </Text>
         <Button
-          variant="light"
-          color="blue.7"
+          variant="filled"
+          color="pink"
           radius="md"
           size="xs"
           onClick={() => onSizeChange(SIZE_LIMITS.STEP)}
           disabled={size >= SIZE_LIMITS.MAX}
-          style={{ fontWeight: 500 }}
+          style={{ fontWeight: 500, backgroundColor: "#f8bbd9", color: "white" }}
         >
           大きく
         </Button>

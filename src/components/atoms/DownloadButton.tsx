@@ -26,14 +26,15 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
       size="lg" 
       radius="xl"
       variant="gradient"
-      gradient={{ from: 'cyan', to: 'blue' }}
+      gradient={{ from: "#fce4ec", to: "#f8bbd9" }}
       onClick={onDownload}
       loading={isDownloading}
       disabled={isDownloading || hasError}
       style={{
         fontSize: '1.1rem',
         padding: '12px 24px',
-        fontWeight: 600
+        fontWeight: 600,
+        color: "white"
       }}
     >
       {isDownloading ? 'ダウンロード中...' : 'アイコン画像ダウンロード'}
