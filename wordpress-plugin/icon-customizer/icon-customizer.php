@@ -121,7 +121,9 @@ class IconCustomizer {
      * 
      * 読み込まれるアセット:
      * 1. editor-preview.css - ショートコードプレビュー用スタイル
-     * 2. editor.js - エディター拡張機能（将来的な機能追加用）
+     * 2. custom-block.js - Icon Customizerカスタムブロック（メイン機能）
+     * 3. custom-block.css - カスタムブロック専用スタイル
+     * 4. editor.js - エディター拡張機能（補助機能）
      * 
      * 実行タイミング:
      * - enqueue_block_editor_assets フックで実行
@@ -130,7 +132,9 @@ class IconCustomizer {
      * 依存関係:
      * - wp-blocks: WordPressブロック機能
      * - wp-element: React要素作成機能
-     * - wp-editor: エディター統合機能
+     * - wp-components: WordPress標準UIコンポーネント
+     * - wp-block-editor: ブロックエディター統合機能
+     * - wp-media-utils: メディアアップロード機能
      */
     public function enqueue_editor_assets() {
         
@@ -143,31 +147,77 @@ class IconCustomizer {
             ICON_CUSTOMIZER_VERSION  // バージョン（キャッシュ制御用）
         );
         
-        // ===== 将来のエディター拡張用JavaScript =====
-        // 現在は最小限だが、将来的なブロック拡張に備えて準備
-        // 例: カスタムブロック追加、ショートコード挿入ボタン等
+        // ===== カスタムブロック用CSS読み込み =====
+        // Icon Customizerカスタムブロックのエディター内スタイリング
+        wp_enqueue_style(
+            'icon-customizer-custom-block-css',  // ハンドル名
+            ICON_CUSTOMIZER_PLUGIN_URL . 'assets/custom-block.css',  // CSSファイルパス
+            array(),  // 依存関係なし
+            ICON_CUSTOMIZER_VERSION  // バージョン
+        );
+        
+        // ===== Icon Customizerカスタムブロック JavaScript読み込み =====
+        // メイン機能: 直感的なブロック編集UI、リアルタイムプレビュー、ショートコード出力
+        wp_enqueue_script(
+            'icon-customizer-custom-block-js',  // ハンドル名
+            ICON_CUSTOMIZER_PLUGIN_URL . 'assets/custom-block.js',  // JSファイルパス
+            array(
+                'wp-blocks',        // ブロック登録API
+                'wp-element',       // React要素作成
+                'wp-components',    // WordPress標準UIコンポーネント
+                'wp-block-editor',  // ブロックエディター統合
+                'wp-media-utils'    // メディアアップロード機能
+            ),
+            ICON_CUSTOMIZER_VERSION,  // バージョン
+            true  // フッターで読み込み（ページ読み込み速度向上）
+        );
+        
+        // ===== 補助的なエディター拡張JavaScript読み込み =====
+        // 補助機能: エディター監視、デバッグ機能、将来的な機能拡張基盤
         wp_enqueue_script(
             'icon-customizer-editor-js',  // ハンドル名
             ICON_CUSTOMIZER_PLUGIN_URL . 'assets/editor.js',  // JSファイルパス
             array('wp-blocks', 'wp-element', 'wp-editor'),  // WordPress標準の依存関係
             ICON_CUSTOMIZER_VERSION,  // バージョン
-            true  // フッターで読み込み（ページ読み込み速度向上）
+            true  // フッターで読み込み
         );
         
         // ===== エディター用設定をJavaScriptに渡す =====
-        // 将来的にエディター機能を拡張する際に使用
+        // カスタムブロックとエディター拡張機能で共有する設定情報
         wp_localize_script(
-            'icon-customizer-editor-js',  // 対象スクリプトハンドル
+            'icon-customizer-custom-block-js',  // メインのカスタムブロックスクリプト
             'iconCustomizerEditor',  // JavaScript変数名
             array(
                 'pluginUrl' => ICON_CUSTOMIZER_PLUGIN_URL,  // プラグインURL
                 'version' => ICON_CUSTOMIZER_VERSION,  // バージョン情報
                 'nonce' => wp_create_nonce('icon_customizer_editor'),  // セキュリティトークン
+                'defaultImage' => ICON_CUSTOMIZER_PLUGIN_URL . 'assets/dummy-icon.png',  // デフォルト画像
                 'strings' => array(  // 翻訳可能な文字列
-                    'insertShortcode' => __('Insert Icon Customizer', 'icon-customizer'),
-                    'previewTitle' => __('Icon Customizer Preview', 'icon-customizer'),
-                    'settingsTitle' => __('Icon Settings', 'icon-customizer'),
+                    'blockTitle' => __('Icon Customizer', 'icon-customizer'),
+                    'blockDescription' => __('カスタマイズ可能なアイコンを挿入します', 'icon-customizer'),
+                    'imageLabel' => __('画像URL', 'icon-customizer'),
+                    'shapeLabel' => __('形状', 'icon-customizer'),
+                    'sizeLabel' => __('サイズ', 'icon-customizer'),
+                    'previewTitle' => __('プレビュー', 'icon-customizer'),
+                    'errorImageLoad' => __('画像を読み込めませんでした', 'icon-customizer'),
+                    'selectFromLibrary' => __('メディアライブラリから選択', 'icon-customizer'),
+                    'enterUrlDirectly' => __('URLを直接入力', 'icon-customizer'),
+                    'circleShape' => __('円形', 'icon-customizer'),
+                    'squareShape' => __('四角形', 'icon-customizer'),
                 )
+            )
+        );
+        
+        // ===== 補助エディター機能用設定 =====
+        // editor.js 用の設定情報（別途設定）
+        wp_localize_script(
+            'icon-customizer-editor-js',  // 補助エディタースクリプト
+            'iconCustomizerEditorConfig',  // 別の変数名で混同を避ける
+            array(
+                'pluginUrl' => ICON_CUSTOMIZER_PLUGIN_URL,
+                'version' => ICON_CUSTOMIZER_VERSION,
+                'debug' => WP_DEBUG,  // デバッグモード情報
+                'blockName' => 'icon-customizer/icon-block'  // 登録されるブロック名
             )
         );
     }
