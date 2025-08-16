@@ -3,7 +3,7 @@
  * Plugin Name: Icon Customizer
  * Plugin URI: https://github.com/1ssei112266/icon-editor
  * Description: WordPress埋め込み可能なアイコンカスタマイザー。ショートコード [icon_customizer] で表示できます。
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: IsseiSuzuki
  * License: GPL v2 or later
  * Text Domain: icon-customizer
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('ICON_CUSTOMIZER_VERSION', '1.0.1');
+define('ICON_CUSTOMIZER_VERSION', '1.0.2');
 define('ICON_CUSTOMIZER_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ICON_CUSTOMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
