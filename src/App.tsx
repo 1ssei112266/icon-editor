@@ -31,7 +31,7 @@ import { SIZE_LIMITS, MOBILE_BREAKPOINT } from "./constants";
 /** アプリケーション全体の背景スタイル */
 const appBackgroundStyle = {
   minHeight: "100vh",
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  background: "transparent",
   position: "relative" as const,
   overflow: "hidden" as const,
 };
@@ -221,15 +221,20 @@ function App() {
                   >
                     <Group gap="sm" justify="center" align="center" style={{ flexDirection: "row", flexWrap: "nowrap" }}>
                       <Button
-                        variant="gradient"
-                        gradient={{ from: "#fce4ec", to: "#f8bbd9" }}
+                        variant="filled"
                         radius="xl"
                         size="md"
                         onClick={async () => {
                           if (isDownloading) return;
                           setIsDownloading(true);
                           try {
-                            await downloadIcon();
+                            // 元の透過画像をそのままダウンロード
+                            const link = document.createElement('a');
+                            link.download = `original-icon-${Date.now()}.png`;
+                            link.href = baseImageUrl;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
                           } finally {
                             setIsDownloading(false);
                           }
@@ -237,6 +242,7 @@ function App() {
                         loading={isDownloading}
                         disabled={isDownloading || imageError}
                         style={{
+                          backgroundColor: "#f8bbd9",
                           fontWeight: 600,
                           boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
                           backdropFilter: "blur(8px)",
@@ -246,19 +252,19 @@ function App() {
                         ダウンロード
                       </Button>
                       <Button
-                        variant="gradient"
-                        gradient={{ from: "#fce4ec", to: "#f8bbd9" }}
+                        variant="filled"
                         radius="xl"
                         size="md"
                         onClick={() => setIsCustomizing(true)}
                         style={{
+                          backgroundColor: "#f8bbd9",
                           fontWeight: 600,
                           boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
                           backdropFilter: "blur(8px)",
                           color: "white",
                         }}
                       >
-                        カスタマイズ
+                        自分好みに編集
                       </Button>
                     </Group>
                   </Box>
@@ -285,7 +291,7 @@ function App() {
                 >
                   <Title
                     order={2}
-                    c="white"
+                    c="dark"
                     size={isMobile ? "1.5rem" : "2rem"}
                   >
                     プレビュー
@@ -335,7 +341,7 @@ function App() {
                 >
                   <Title
                     order={2}
-                    c="white"
+                    c="dark"
                     size={isMobile ? "1.5rem" : "2rem"}
                     ta="center"
                   >
@@ -355,12 +361,12 @@ function App() {
                   {/* ツール終了ボタン */}
                   <Button
                     leftSection={<IconX size={16} />}
-                    variant="gradient"
-                    gradient={{ from: "#fce4ec", to: "#f8bbd9" }}
+                    variant="filled"
                     radius="xl"
                     size="lg"
                     onClick={() => setIsCustomizing(false)}
                     style={{
+                      backgroundColor: "#f8bbd9",
                       fontWeight: 600,
                       fontSize: "1.1rem",
                       padding: "12px 24px",

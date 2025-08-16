@@ -25,12 +25,12 @@ export const DownloadButton: React.FC<DownloadButtonProps> = ({
       leftSection={isDownloading ? <Loader size={20} color="white" /> : <IconDownload size={20} />}
       size="lg" 
       radius="xl"
-      variant="gradient"
-      gradient={{ from: "#fce4ec", to: "#f8bbd9" }}
+      variant="filled"
       onClick={onDownload}
       loading={isDownloading}
       disabled={isDownloading || hasError}
       style={{
+        backgroundColor: "#f8bbd9",
         fontSize: '1.1rem',
         padding: '12px 24px',
         fontWeight: 600,
