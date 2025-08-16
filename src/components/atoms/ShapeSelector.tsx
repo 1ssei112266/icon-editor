@@ -24,14 +24,16 @@ export const ShapeSelector: React.FC<ShapeSelectorProps> = ({
           <Button
             key={shapeOption}
             variant={shape === shapeOption ? 'filled' : 'light'}
-            color={shape === shapeOption ? 'blue' : 'gray'}
+            color={shape === shapeOption ? 'pink' : 'gray'}
             radius="lg"
             size="sm"
             onClick={() => onShapeChange(shapeOption)}
             style={{
               fontWeight: 500,
               border: '2px solid',
-              borderColor: shape === shapeOption ? '#3b82f6' : '#d1d5db',
+              borderColor: shape === shapeOption ? '#f8bbd9' : '#d1d5db',
+              backgroundColor: shape === shapeOption ? '#f8bbd9' : undefined,
+              color: shape === shapeOption ? 'white' : undefined,
             }}
           >
             {shapeOption === 'circle' ? 'まる●' : '□しかく'}
