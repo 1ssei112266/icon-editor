@@ -4,7 +4,7 @@
  * Plugin URI: https://github.com/1ssei112266/icon-editor
  * Description: WordPress埋め込み可能なアイコンカスタマイザー。ショートコード [icon_customizer] で表示できます。
  * Version: 1.0.0
- * Author: Your Name
+ * Author: IsseiSuzuki
  * License: GPL v2 or later
  * Text Domain: icon-customizer
  */
