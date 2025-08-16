@@ -8,9 +8,9 @@
  */
 
 const { registerBlockType } = wp.blocks;
-const { createElement, useState } = wp.element;
+const { createElement } = wp.element;
 const { TextControl, Button } = wp.components;
-const { useBlockProps, MediaUpload } = wp.blockEditor;
+const { MediaUpload } = wp.blockEditor;
 
 registerBlockType('icon-customizer/icon-block', {
     title: 'Icon Customizer',
@@ -28,7 +28,6 @@ registerBlockType('icon-customizer/icon-block', {
     edit: function(props) {
         const { attributes, setAttributes } = props;
         const { imageUrl } = attributes;
-        const blockProps = useBlockProps();
         
         // ドラッグ&ドロップハンドラー
         const handleDrop = function(e) {
@@ -55,7 +54,7 @@ registerBlockType('icon-customizer/icon-block', {
             }
         };
         
-        return createElement('div', blockProps,
+        return createElement('div', { className: 'icon-customizer-block' },
             // ヘッダー
             createElement('div', {
                 style: {
