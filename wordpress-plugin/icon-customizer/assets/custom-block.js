@@ -108,18 +108,11 @@ registerBlockType('icon-customizer/icon-block', {
     save: function(props) {
         const { imageUrl } = props.attributes;
         
+        // Gutenbergブロックは保存時にショートコードをテキストノードとして出力
         if (imageUrl) {
-            return createElement('div', {
-                dangerouslySetInnerHTML: {
-                    __html: `[icon_customizer image="${imageUrl}"]`
-                }
-            });
+            return `[icon_customizer image="${imageUrl}"]`;
         }
         
-        return createElement('div', {
-            dangerouslySetInnerHTML: {
-                __html: '[icon_customizer]'
-            }
-        });
+        return '[icon_customizer]';
     }
 });

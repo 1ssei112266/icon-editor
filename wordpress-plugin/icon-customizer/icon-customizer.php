@@ -47,8 +47,7 @@ class IconCustomizer {
      * スクリプトとスタイルの読み込み
      */
     public function enqueue_scripts() {
-        // 常にスクリプトを読み込む（パフォーマンスよりも確実性を優先）
-        // または動的に検出する
+        // 確実性を最優先: フロントエンドでは常にスクリプトを読み込み
         $should_load = false;
         
         // 方法1: 投稿内容からブロックまたはショートコードを検出
@@ -63,10 +62,14 @@ class IconCustomizer {
             if (strpos($content, 'wp:icon-customizer/icon-block') !== false) {
                 $should_load = true;
             }
+            // カスタムブロックが生成したショートコードも検出
+            if (strpos($content, '[icon_customizer') !== false) {
+                $should_load = true;
+            }
         }
         
-        // 方法2: 安全のため、投稿・固定ページでは常に読み込み
-        if (is_single() || is_page()) {
+        // 方法2: 確実性のため、メインクエリでは常に読み込み
+        if (is_main_query() && (is_single() || is_page() || is_home() || is_front_page())) {
             $should_load = true;
         }
         
@@ -260,20 +263,37 @@ class IconCustomizer {
      * @return string               プレビューHTML付きのブロック内容
      */
     public function render_shortcode_preview($block_content, $block) {
-        // ショートコードブロックかつicon_customizerショートコードが含まれる場合のみ処理
+        // カスタムブロックまたはショートコードブロックでicon_customizerが含まれる場合に処理
+        $should_preview = false;
+        
+        // 1. 通常のショートコードブロック
         if (isset($block['blockName']) && $block['blockName'] === 'core/shortcode') {
             if (strpos($block_content, '[icon_customizer') !== false) {
-                
-                // ★ ショートコード属性を解析する（詳細なコメント付き実装）
-                $shortcode_attributes = $this->parse_shortcode_attributes($block_content);
-                
-                // ★ サーバーサイドでプレビューHTMLを生成（詳細なコメント付き実装）
-                $preview_html = $this->generate_editor_preview_html($shortcode_attributes);
-                
-                // エディター内でのプレビュー表示（元のショートコードブロックの前に挿入）
-                return $preview_html . $block_content;
+                $should_preview = true;
             }
         }
+        
+        // 2. カスタムブロック（icon-customizer/icon-block）
+        if (isset($block['blockName']) && $block['blockName'] === 'icon-customizer/icon-block') {
+            $should_preview = true;
+        }
+        
+        // 3. HTMLに直接ショートコードが含まれている場合
+        if (strpos($block_content, '[icon_customizer') !== false) {
+            $should_preview = true;
+        }
+        
+        if ($should_preview) {
+            // ★ ショートコード属性を解析する（詳細なコメント付き実装）
+            $shortcode_attributes = $this->parse_shortcode_attributes($block_content);
+            
+            // ★ サーバーサイドでプレビューHTMLを生成（詳細なコメント付き実装）
+            $preview_html = $this->generate_editor_preview_html($shortcode_attributes);
+            
+            // エディター内でのプレビュー表示（元のブロック内容の前に挿入）
+            return $preview_html . $block_content;
+        }
+        
         return $block_content;
     }
     
