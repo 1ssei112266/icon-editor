@@ -3,7 +3,7 @@ Contributors: IsseiSuzuki
 Tags: icon, customizer, image, editor, shortcode
 Requires at least: 5.0
 Tested up to: 6.3
-Stable tag: 1.0.0
+Stable tag: 1.0.7
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -52,6 +52,15 @@ Icon Customizerは、WordPressサイトに簡単に埋め込めるアイコン�
 3. 色選択画面
 
 == Changelog ==
+
+= 1.0.7 =
+* 🔧 React Error #299 完全修正: createRoot重複実行防止
+* プレビュー画面削除
+* UIデバッグログ要素を削除
+
+= 1.0.6 =
+* 📦 WordPress プラグイン クリーンUI対応
+* 🎨 MantineベースCSS問題を完全解決
 
 = 1.0.0 =
 * 初回リリース
