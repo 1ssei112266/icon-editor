@@ -3,7 +3,7 @@
  * Plugin Name: Icon Customizer
  * Plugin URI: https://github.com/1ssei112266/icon-editor
  * Description: WordPress埋め込み可能なアイコンカスタマイザー。ショートコード [icon_customizer] で表示できます。
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: IsseiSuzuki
  * License: GPL v2 or later
  * Text Domain: icon-customizer
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('ICON_CUSTOMIZER_VERSION', '1.0.4');
+define('ICON_CUSTOMIZER_VERSION', '1.0.5');
 define('ICON_CUSTOMIZER_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ICON_CUSTOMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
@@ -47,9 +47,30 @@ class IconCustomizer {
      * スクリプトとスタイルの読み込み
      */
     public function enqueue_scripts() {
-        // ショートコードまたはブロックが使用されているページでのみ読み込み
+        // 常にスクリプトを読み込む（パフォーマンスよりも確実性を優先）
+        // または動的に検出する
+        $should_load = false;
+        
+        // 方法1: 投稿内容からブロックまたはショートコードを検出
         global $post;
-        if (is_object($post) && (has_shortcode($post->post_content, 'icon_customizer') || strpos($post->post_content, 'icon-customizer/icon-block') !== false)) {
+        if (is_object($post)) {
+            $content = $post->post_content;
+            // ショートコード直接使用の場合
+            if (has_shortcode($content, 'icon_customizer')) {
+                $should_load = true;
+            }
+            // Gutenbergブロック使用の場合
+            if (strpos($content, 'wp:icon-customizer/icon-block') !== false) {
+                $should_load = true;
+            }
+        }
+        
+        // 方法2: 安全のため、投稿・固定ページでは常に読み込み
+        if (is_single() || is_page()) {
+            $should_load = true;
+        }
+        
+        if ($should_load) {
             wp_enqueue_style(
                 'icon-customizer-css',
                 ICON_CUSTOMIZER_PLUGIN_URL . 'assets/index.css',
