@@ -403,19 +403,6 @@ class IconCustomizer {
                 <!-- アイコンで視覚的にわかりやすく -->
                 <span style="font-size: 16px;">🎨</span>
                 <span>Icon Customizer</span>
-                
-                <!-- 設定されている画像URLを小さく表示（開発時の確認用） -->
-                <span style="
-                    margin-left: auto;
-                    font-size: 11px;
-                    opacity: 0.8;
-                    max-width: 200px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                ">
-                    <?php echo esc_html(basename($escaped_image_url)); ?>
-                </span>
             </div>
             
             <!-- プレビューコンテンツ: 実際のアイコン表示エリア -->
