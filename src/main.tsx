@@ -53,9 +53,30 @@ function initializeIconCustomizers() {
   }
 }
 
-// DOM読み込み完了後に初期化
+// WordPress環境での確実な初期化
+function tryInitialize() {
+  // インスタンス設定が存在するかチェック
+  if (window.ICON_EDITOR_INSTANCES && Object.keys(window.ICON_EDITOR_INSTANCES).length > 0) {
+    initializeIconCustomizers();
+    return true;
+  }
+  return false;
+}
+
+// 複数のタイミングで初期化を試行
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initializeIconCustomizers);
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!tryInitialize()) {
+      // WordPressでは設定が遅れて読み込まれる場合があるため、少し待ってから再試行
+      setTimeout(tryInitialize, 100);
+      setTimeout(tryInitialize, 500);
+      setTimeout(tryInitialize, 1000);
+    }
+  });
 } else {
-  initializeIconCustomizers();
+  if (!tryInitialize()) {
+    setTimeout(tryInitialize, 100);
+    setTimeout(tryInitialize, 500);
+    setTimeout(tryInitialize, 1000);
+  }
 }

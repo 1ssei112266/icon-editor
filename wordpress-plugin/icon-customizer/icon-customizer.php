@@ -122,6 +122,15 @@ class IconCustomizer {
                     window.ICON_EDITOR_INSTANCES = {};
                 }
                 window.ICON_EDITOR_INSTANCES['<?php echo esc_js($unique_id); ?>'] = <?php echo json_encode($config); ?>;
+                
+                // デバッグ情報を出力（開発時のみ）
+                if (typeof console !== 'undefined' && console.log) {
+                    console.log('Icon Customizer: 設定を登録しました', {
+                        instanceId: '<?php echo esc_js($unique_id); ?>',
+                        config: <?php echo json_encode($config); ?>,
+                        totalInstances: Object.keys(window.ICON_EDITOR_INSTANCES).length
+                    });
+                }
             </script>
             <div id="<?php echo esc_attr($unique_id); ?>"></div>
         </div>
