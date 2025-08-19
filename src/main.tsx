@@ -94,16 +94,13 @@ function tryInitialize() {
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     if (!tryInitialize()) {
-      // WordPressでは設定が遅れて読み込まれる場合があるため、少し待ってから再試行
-      setTimeout(tryInitialize, 100);
-      setTimeout(tryInitialize, 500);
-      setTimeout(tryInitialize, 1000);
+      // 開発環境では即座に通常初期化を実行
+      initializeIconCustomizers();
     }
   });
 } else {
   if (!tryInitialize()) {
-    setTimeout(tryInitialize, 100);
-    setTimeout(tryInitialize, 500);
-    setTimeout(tryInitialize, 1000);
+    // 開発環境では即座に通常初期化を実行
+    initializeIconCustomizers();
   }
 }

@@ -74,7 +74,12 @@ function App({ instanceConfig }: AppProps = {}) {
   const [imageScale, setImageScale] = useState<number>(120);
 
   /** 背景色（HEX形式） */
-  const [bgColor, setBgColor] = useState<string>("#60a5fa");
+  const [bgColor, setBgColor] = useState<string>("#ffffff");
+
+  // デバッグ用：bgColorの変化を監視
+  React.useEffect(() => {
+    console.log('背景色が変更されました:', bgColor);
+  }, [bgColor]);
 
   /** カスタマイズモードの状態 */
   const [isCustomizing, setIsCustomizing] = useState<boolean>(false);
@@ -211,36 +216,19 @@ function App({ instanceConfig }: AppProps = {}) {
           {!isCustomizing ? (
             <Center style={{ minHeight: "calc(100vh - 160px)" }}>
               <Stack align="center" gap="xl">
-                {/* メインプレビューエリア */}
-                <Box style={{ position: "relative" }}>
-                  <Paper
-                    p="xl"
-                    withBorder
-                    radius="xl"
-                    shadow="xl"
-                    style={getPreviewAreaStyle(isMobile)}
-                  >
-                    <IconPreview
-                      imageUrl={baseImageUrl}
-                      shape={shape}
-                      imageScale={imageScale}
-                      bgColor={bgColor}
-                      isEditing={false}
-                      hasImageError={imageError}
-                    />
-                  </Paper>
-
-                  {/* ダウンロードとカスタマイズボタン（中央下部） */}
-                  <Box
-                    style={{
-                      position: "absolute",
-                      bottom: 16,
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      zIndex: 10,
-                    }}
-                  >
-                    <Group gap="sm" justify="center" align="center" style={{ flexDirection: "row", flexWrap: "nowrap" }}>
+                {/* アイコンプレビュー表示 */}
+                <IconPreview
+                  imageUrl={baseImageUrl}
+                  shape={shape}
+                  imageScale={imageScale}
+                  bgColor={bgColor}
+                  isEditing={false}
+                  hasImageError={imageError}
+                />
+                
+                {/* ダウンロードとカスタマイズボタン */}
+                <Box>
+                  <Group gap="sm" justify="center" align="center" style={{ flexDirection: "row", flexWrap: "nowrap" }}>
                       <Button
                         variant="filled"
                         radius="xl"
@@ -288,7 +276,6 @@ function App({ instanceConfig }: AppProps = {}) {
                         自分好みに編集
                       </Button>
                     </Group>
-                  </Box>
                 </Box>
               </Stack>
             </Center>

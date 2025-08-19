@@ -46,6 +46,13 @@ export const IconPreview: React.FC<IconPreviewProps> = ({
     border: isEditing ? '3px solid white' : 'none',
     transition: 'all 0.3s ease',
     overflow: 'hidden' as const,
+    // WordPress環境での確実な色変更のため
+    ...(isEditing && {
+      backgroundColor: `${bgColor} !important`,
+      background: `${bgColor} !important`,
+      '--tw-bg-opacity': '1',
+      '--icon-bg-color': bgColor,
+    }),
   }), [bgColor, shape, isEditing]);
 
   return (

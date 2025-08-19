@@ -3,7 +3,7 @@
  * Plugin Name: Icon Customizer
  * Plugin URI: https://github.com/1ssei112266/icon-editor
  * Description: WordPress埋め込み可能なアイコンカスタマイザー。ショートコード [icon_customizer] で表示できます。
- * Version: 1.0.7
+ * Version: 1.0.15
  * Author: IsseiSuzuki
  * License: GPL v2 or later
  * Text Domain: icon-customizer
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('ICON_CUSTOMIZER_VERSION', '1.0.7');
+define('ICON_CUSTOMIZER_VERSION', '1.0.15');
 define('ICON_CUSTOMIZER_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ICON_CUSTOMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
@@ -47,33 +47,8 @@ class IconCustomizer {
      * スクリプトとスタイルの読み込み
      */
     public function enqueue_scripts() {
-        // 確実性を最優先: フロントエンドでは常にスクリプトを読み込み
-        $should_load = false;
-        
-        // 方法1: 投稿内容からブロックまたはショートコードを検出
-        global $post;
-        if (is_object($post)) {
-            $content = $post->post_content;
-            // ショートコード直接使用の場合
-            if (has_shortcode($content, 'icon_customizer')) {
-                $should_load = true;
-            }
-            // Gutenbergブロック使用の場合
-            if (strpos($content, 'wp:icon-customizer/icon-block') !== false) {
-                $should_load = true;
-            }
-            // カスタムブロックが生成したショートコードも検出
-            if (strpos($content, '[icon_customizer') !== false) {
-                $should_load = true;
-            }
-        }
-        
-        // 方法2: 確実性のため、メインクエリでは常に読み込み
-        if (is_main_query() && (is_single() || is_page() || is_home() || is_front_page())) {
-            $should_load = true;
-        }
-        
-        if ($should_load) {
+        // 確実な動作のため、フロントエンドで常にアセットを読み込み
+        if (!is_admin()) {
             wp_enqueue_style(
                 'icon-customizer-css',
                 ICON_CUSTOMIZER_PLUGIN_URL . 'assets/index.css',
@@ -377,134 +352,8 @@ class IconCustomizer {
      * @return string           プレビューHTML
      */
     private function generate_editor_preview_html($attributes) {
-        // 属性値を安全な形でHTMLに埋め込むためのエスケープ処理
-        $escaped_image_url = esc_url($attributes['image']);
-        $escaped_width = esc_attr($attributes['width']);
-        $escaped_height = esc_attr($attributes['height']);
-        
-        // プレビュー用のHTML構築
-        // ※ 出力バッファリングを使用して複数行HTMLを安全に構築
-        ob_start();
-        ?>
-        <!-- Icon Customizer エディタープレビュー開始 -->
-        <div class="icon-customizer-editor-preview" style="margin: 16px 0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            
-            <!-- プレビューヘッダー: 何のブロックかを明示 -->
-            <div class="preview-header" style="
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 12px 16px;
-                font-size: 14px;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            ">
-                <!-- アイコンで視覚的にわかりやすく -->
-                <span style="font-size: 16px;">🎨</span>
-                <span>Icon Customizer</span>
-            </div>
-            
-            <!-- プレビューコンテンツ: 実際のアイコン表示エリア -->
-            <div class="preview-content" style="
-                background: #f8f9fa;
-                padding: 24px;
-                text-align: center;
-                min-height: 120px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                position: relative;
-            ">
-                
-                <!-- 背景パターン（チェッカーボード）で透過部分を可視化 -->
-                <div style="
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    opacity: 0.1;
-                    background-image: 
-                        linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                        linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                        linear-gradient(45deg, transparent 75%, #ccc 75%), 
-                        linear-gradient(-45deg, transparent 75%, #ccc 75%);
-                    background-size: 20px 20px;
-                    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-                "></div>
-                
-                <!-- メインアイコン表示 -->
-                <div style="position: relative; z-index: 1;">
-                    
-                    <!-- デフォルトの円形背景 (プレビューでは固定設定) -->
-                    <div style="
-                        width: 80px;
-                        height: 80px;
-                        background: linear-gradient(135deg, #60a5fa, #3b82f6);
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 12px;
-                        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
-                    ">
-                        <!-- 画像表示 (エラー時はプレースホルダー表示) -->
-                        <img 
-                            src="<?php echo $escaped_image_url; ?>" 
-                            alt="Icon Preview"
-                            style="
-                                width: 48px;
-                                height: 48px;
-                                object-fit: contain;
-                                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-                            "
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                        />
-                        
-                        <!-- 画像読み込み失敗時のフォールバック表示 -->
-                        <div style="
-                            display: none;
-                            width: 48px;
-                            height: 48px;
-                            background: rgba(255,255,255,0.9);
-                            border-radius: 4px;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 20px;
-                        ">
-                            🖼️
-                        </div>
-                    </div>
-                    
-                    <!-- プレビュー説明テキスト -->
-                    <div style="
-                        font-size: 12px;
-                        color: #64748b;
-                        margin-top: 8px;
-                    ">
-                        フロントエンドでカスタマイズ可能
-                    </div>
-                    
-                    <!-- 設定値表示（デバッグ情報として小さく表示） -->
-                    <div style="
-                        font-size: 10px;
-                        color: #94a3b8;
-                        margin-top: 4px;
-                        opacity: 0.7;
-                    ">
-                        サイズ: <?php echo $escaped_width; ?> × <?php echo $escaped_height; ?>
-                    </div>
-                    
-                </div>
-            </div>
-            
-        </div>
-        <!-- Icon Customizer エディタープレビュー終了 -->
-        <?php
-        
-        // 出力バッファの内容を取得してクリア
-        return ob_get_clean();
+        // プレビュー表示を完全に無効化
+        return '';
     }
     
     /**
