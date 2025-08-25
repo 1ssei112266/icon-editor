@@ -3,7 +3,7 @@ Contributors: IsseiSuzuki
 Tags: icon, customizer, image, editor, shortcode
 Requires at least: 5.0
 Tested up to: 6.3
-Stable tag: 1.0.15
+Stable tag: 1.0.22
 Requires PHP: 7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -52,6 +52,48 @@ Icon Customizerは、WordPressサイトに簡単に埋め込めるアイコン�
 3. 色選択画面
 
 == Changelog ==
+
+= 1.0.22 =
+* 🗑️ 問題のあった虹色カスタムカラーボタンを削除
+* 🎯 カスタマイズダウンロード機能を完全修正
+* 📦 Canvas APIによる高品質1024px PNG生成
+* ✅ 形状・サイズ・色の設定を正確にダウンロード画像に反映
+
+= 1.0.21 =
+* 🌈 ローカル版と完全同一の虹色カスタムカラーボタン追加
+* 🎨 ローカル版と同じ色パレット（9色プリセット）に統一
+* ✨ 虹色ボタンクリックでシステムカラーピッカー起動
+* 🎯 ローカル版とWordPress版のUI・機能を完全一致
+
+= 1.0.20 =
+* 🎨 豊富な色選択機能を復活：9色プリセットパレット
+* 🌈 カスタムカラーピッカー追加：自由な色選択が可能
+* ✨ 元のReact版と同等の色カスタマイズ機能を実現
+* 📱 すべてHTML+JavaScriptで軽量動作
+
+= 1.0.19 =
+* 🎯 React依存完全排除：純粋HTML+JavaScript実装に変更
+* ✅ WordPress環境での色変更問題を根本解決
+* 🚀 軽量化とパフォーマンス向上
+* 🔧 テーマ競合問題を完全回避
+* 📱 全機能維持：形状・サイズ・色のカスタマイズ、ダウンロード対応
+
+= 1.0.18 =
+* 💪 最強CSS適用：動的style要素注入でWordPressテーマを完全に上書き
+* 🔥 !important宣言でCSS優先度を最高レベルに設定
+* 🎯 WordPress環境での色変更を確実に動作させる決定版
+* 🧪 テストで確認：React state更新は正常、CSS適用のみの問題を解決
+
+= 1.0.17 =
+* 🎉 根本原因解決：WordPress環境でのprocess変数エラーを修正
+* 🔧 Vite設定でNode.js変数をブラウザ互換に定義
+* ✅ 色変更機能が完全に動作するように修正
+* 🐛 「process is not defined」エラーを解消
+
+= 1.0.16 =
+* 🔧 WordPress環境での色変更問題を根本解決：backgroundColorからbackgroundプロパティに変更
+* 🎯 CSS競合回避：WordPressテーマのbackgroundColor上書きを無効化
+* MantineのBoxコンポーネントから素のdiv要素に変更してCSS優先度問題を解決
 
 = 1.0.15 =
 * 🖼️ 初期画面のアイコンプレビュー表示を復活
