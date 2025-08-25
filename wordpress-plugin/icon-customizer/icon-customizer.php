@@ -3,7 +3,7 @@
  * Plugin Name: Icon Customizer
  * Plugin URI: https://github.com/1ssei112266/icon-editor
  * Description: WordPress埋め込み可能なアイコンカスタマイザー。ショートコード [icon_customizer] で表示できます。
- * Version: 1.0.7
+ * Version: 1.0.24
  * Author: IsseiSuzuki
  * License: GPL v2 or later
  * Text Domain: icon-customizer
@@ -15,7 +15,7 @@ if (!defined('ABSPATH')) {
 }
 
 // プラグインの定数定義
-define('ICON_CUSTOMIZER_VERSION', '1.0.7');
+define('ICON_CUSTOMIZER_VERSION', '1.0.24');
 define('ICON_CUSTOMIZER_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ICON_CUSTOMIZER_PLUGIN_PATH', plugin_dir_path(__FILE__));
 
@@ -47,46 +47,14 @@ class IconCustomizer {
      * スクリプトとスタイルの読み込み
      */
     public function enqueue_scripts() {
-        // 確実性を最優先: フロントエンドでは常にスクリプトを読み込み
-        $should_load = false;
-        
-        // 方法1: 投稿内容からブロックまたはショートコードを検出
-        global $post;
-        if (is_object($post)) {
-            $content = $post->post_content;
-            // ショートコード直接使用の場合
-            if (has_shortcode($content, 'icon_customizer')) {
-                $should_load = true;
-            }
-            // Gutenbergブロック使用の場合
-            if (strpos($content, 'wp:icon-customizer/icon-block') !== false) {
-                $should_load = true;
-            }
-            // カスタムブロックが生成したショートコードも検出
-            if (strpos($content, '[icon_customizer') !== false) {
-                $should_load = true;
-            }
-        }
-        
-        // 方法2: 確実性のため、メインクエリでは常に読み込み
-        if (is_main_query() && (is_single() || is_page() || is_home() || is_front_page())) {
-            $should_load = true;
-        }
-        
-        if ($should_load) {
+        // HTML+JS版では外部スクリプト不要
+        // CSSのみ読み込み
+        if (!is_admin()) {
             wp_enqueue_style(
                 'icon-customizer-css',
                 ICON_CUSTOMIZER_PLUGIN_URL . 'assets/index.css',
                 array(),
                 ICON_CUSTOMIZER_VERSION
-            );
-            
-            wp_enqueue_script(
-                'icon-customizer-js',
-                ICON_CUSTOMIZER_PLUGIN_URL . 'assets/index.js',
-                array(),
-                ICON_CUSTOMIZER_VERSION,
-                true
             );
         }
     }
@@ -107,32 +75,296 @@ class IconCustomizer {
             'height' => 'auto'
         ), $atts);
         
-        // 設定をJavaScriptに渡す
-        $config = array(
-            'baseImageUrl' => esc_url($attributes['image']),
-            'pluginUrl' => ICON_CUSTOMIZER_PLUGIN_URL,
-            'instanceId' => $unique_id
-        );
-        
         ob_start();
         ?>
         <div id="<?php echo esc_attr($unique_id); ?>-container" class="icon-customizer-container" style="width: <?php echo esc_attr($attributes['width']); ?>; height: <?php echo esc_attr($attributes['height']); ?>;">
-            <script type="text/javascript">
-                if (!window.ICON_EDITOR_INSTANCES) {
-                    window.ICON_EDITOR_INSTANCES = {};
-                }
-                window.ICON_EDITOR_INSTANCES['<?php echo esc_js($unique_id); ?>'] = <?php echo json_encode($config); ?>;
+            
+            <!-- 初期表示: アイコンプレビューとボタン -->
+            <div id="<?php echo esc_attr($unique_id); ?>-initial" style="text-align: center; padding: 20px;">
+                <div style="width: 200px; height: 200px; margin: 0 auto 20px; background: transparent; display: flex; align-items: center; justify-content: center; border-radius: 16px;">
+                    <img src="<?php echo esc_url($attributes['image']); ?>" alt="アイコン" style="max-width: 180px; max-height: 180px; object-fit: cover;" />
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="downloadOriginal('<?php echo esc_js($attributes['image']); ?>')" style="padding: 12px 24px; background: #f8bbd9; color: white; border: none; border-radius: 20px; font-weight: 600; cursor: pointer;">
+                        ダウンロード
+                    </button>
+                    <button onclick="showCustomizer('<?php echo esc_js($unique_id); ?>')" style="padding: 12px 24px; background: #f8bbd9; color: white; border: none; border-radius: 20px; font-weight: 600; cursor: pointer;">
+                        自分好みに編集
+                    </button>
+                </div>
+            </div>
+
+            <!-- カスタマイズ画面（初期は非表示） -->
+            <div id="<?php echo esc_attr($unique_id); ?>-customize" style="display: none; padding: 20px;">
+                <div style="display: flex; gap: 30px; align-items: flex-start; justify-content: center; flex-wrap: wrap;">
+                    
+                    <!-- プレビューエリア -->
+                    <div style="text-align: center;">
+                        <h3 style="margin-bottom: 20px;">プレビュー</h3>
+                        <div id="<?php echo esc_attr($unique_id); ?>-preview" style="width: 200px; height: 200px; background: #ffffff; border: 3px solid white; border-radius: 16px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                            <img src="<?php echo esc_url($attributes['image']); ?>" alt="アイコン" style="width: 120px; height: 120px; object-fit: cover;" />
+                        </div>
+                        <button onclick="downloadCustomized('<?php echo esc_js($unique_id); ?>')" style="padding: 10px 20px; background: #4ade80; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            ダウンロード
+                        </button>
+                    </div>
+
+                    <!-- カスタマイズパネル -->
+                    <div style="background: #fef3c7; border: 2px solid #fde68a; border-radius: 16px; padding: 20px; min-width: 250px;">
+                        <h3 style="margin-bottom: 20px; text-align: center;">カスタマイズ</h3>
+                        
+                        <!-- 形状選択 -->
+                        <div style="margin-bottom: 20px;">
+                            <p style="font-weight: 600; margin-bottom: 10px; text-align: center;">形状</p>
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+                                <button onclick="changeShape('<?php echo esc_js($unique_id); ?>', 'circle')" style="padding: 8px 16px; background: #f8bbd9; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                    円形
+                                </button>
+                                <button onclick="changeShape('<?php echo esc_js($unique_id); ?>', 'square')" style="padding: 8px 16px; background: #f8bbd9; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                    四角形
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- サイズ調整 -->
+                        <div style="margin-bottom: 20px;">
+                            <p style="font-weight: 600; margin-bottom: 10px; text-align: center;">サイズ</p>
+                            <div style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                                <button onclick="changeSize('<?php echo esc_js($unique_id); ?>', -10)" style="padding: 8px 16px; background: #f8bbd9; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                    小さく
+                                </button>
+                                <span id="<?php echo esc_attr($unique_id); ?>-size">120%</span>
+                                <button onclick="changeSize('<?php echo esc_js($unique_id); ?>', 10)" style="padding: 8px 16px; background: #f8bbd9; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                    大きく
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 背景色 -->
+                        <div style="margin-bottom: 20px;">
+                            <p style="font-weight: 600; margin-bottom: 10px; text-align: center;">背景色</p>
+                            <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-bottom: 15px;">
+                                <!-- ローカル版と同じ9色プリセット -->
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#a8dadc')" style="width: 28px; height: 28px; background: #a8dadc; border: 2px solid #ccc; border-radius: 50%; cursor: pointer;" title="ライトブルー"></button>
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#f1c0e8')" style="width: 28px; height: 28px; background: #f1c0e8; border: 2px solid #ccc; border-radius: 50%; cursor: pointer;" title="ピンク"></button>
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#ffeb3b')" style="width: 28px; height: 28px; background: #ffeb3b; border: 2px solid #ccc; border-radius: 50%; cursor: pointer;" title="イエロー"></button>
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#ff9800')" style="width: 28px; height: 28px; background: #ff9800; border: 2px solid #ccc; border-radius: 50%; cursor: pointer;" title="オレンジ"></button>
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#2196f3')" style="width: 28px; height: 28px; background: #2196f3; border: 2px solid #ccc; border-radius: 50%; cursor: pointer;" title="ブルー"></button>
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#4caf50')" style="width: 28px; height: 28px; background: #4caf50; border: 2px solid #ccc; border-radius: 50%; cursor: pointer;" title="グリーン"></button>
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#f44336')" style="width: 28px; height: 28px; background: #f44336; border: 2px solid #ccc; border-radius: 50%; cursor: pointer;" title="レッド"></button>
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#ffffff')" style="width: 28px; height: 28px; background: #ffffff; border: 2px solid #999; border-radius: 50%; cursor: pointer;" title="ホワイト"></button>
+                                <button onclick="changeColor('<?php echo esc_js($unique_id); ?>', '#000000')" style="width: 28px; height: 28px; background: #000000; border: 2px solid #ccc; border-radius: 50%; cursor: pointer;" title="ブラック"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 閉じるボタン -->
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="hideCustomizer('<?php echo esc_js($unique_id); ?>')" style="padding: 12px 24px; background: #f8bbd9; color: white; border: none; border-radius: 20px; font-weight: 600; cursor: pointer;">
+                        ツールを閉じる
+                    </button>
+                </div>
+            </div>
+
+            <script>
+                // グローバル変数
+                var customizers = {};
                 
-                // デバッグ情報を出力（開発時のみ）
-                if (typeof console !== 'undefined' && console.log) {
-                    console.log('Icon Customizer: 設定を登録しました', {
-                        instanceId: '<?php echo esc_js($unique_id); ?>',
-                        config: <?php echo json_encode($config); ?>,
-                        totalInstances: Object.keys(window.ICON_EDITOR_INSTANCES).length
+                function showCustomizer(id) {
+                    document.getElementById(id + '-initial').style.display = 'none';
+                    document.getElementById(id + '-customize').style.display = 'block';
+                    
+                    // 初期化
+                    if (!customizers[id]) {
+                        customizers[id] = {
+                            shape: 'circle',
+                            size: 120,
+                            color: '#ffffff'
+                        };
+                    }
+                }
+                
+                function hideCustomizer(id) {
+                    document.getElementById(id + '-initial').style.display = 'block';
+                    document.getElementById(id + '-customize').style.display = 'none';
+                }
+                
+                function changeShape(id, shape) {
+                    customizers[id].shape = shape;
+                    updatePreview(id);
+                    console.log('形状変更:', shape);
+                }
+                
+                function changeSize(id, increment) {
+                    customizers[id].size = Math.max(50, Math.min(200, customizers[id].size + increment));
+                    document.getElementById(id + '-size').textContent = customizers[id].size + '%';
+                    updatePreview(id);
+                    console.log('サイズ変更:', customizers[id].size);
+                }
+                
+                function changeColor(id, color) {
+                    customizers[id].color = color;
+                    updatePreview(id);
+                    console.log('色変更:', color);
+                }
+                
+                function updatePreview(id) {
+                    var preview = document.getElementById(id + '-preview');
+                    var config = customizers[id];
+                    
+                    // 背景色を強制適用
+                    preview.style.backgroundColor = config.color;
+                    preview.style.background = config.color;
+                    
+                    // 形状
+                    if (config.shape === 'circle') {
+                        preview.style.borderRadius = '50%';
+                    } else {
+                        preview.style.borderRadius = '16px';
+                    }
+                    
+                    // サイズ
+                    var img = preview.querySelector('img');
+                    if (img) {
+                        var size = Math.round(120 * config.size / 100);
+                        img.style.width = size + 'px';
+                        img.style.height = size + 'px';
+                    }
+                }
+                
+                function downloadOriginal(imageUrl) {
+                    var link = document.createElement('a');
+                    link.download = 'original-icon-' + Date.now() + '.png';
+                    link.href = imageUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    console.log('元画像をダウンロード');
+                }
+                
+                function downloadCustomized(id) {
+                    console.log('=== ダウンロード開始 ===');
+                    console.log('ID:', id);
+                    console.log('全カスタマイザー:', customizers);
+                    console.log('対象設定:', customizers[id]);
+                    
+                    // カスタマイザーが初期化されていない場合は初期化
+                    if (!customizers[id]) {
+                        console.log('設定が未初期化のため初期化します');
+                        customizers[id] = {
+                            shape: 'circle',
+                            size: 120,
+                            color: '#ffffff'
+                        };
+                    }
+                    
+                    var config = customizers[id];
+                    
+                    console.log('使用する設定:', {
+                        shape: config.shape,
+                        size: config.size,
+                        color: config.color
                     });
+                    
+                    var preview = document.getElementById(id + '-preview');
+                    var img = preview.querySelector('img');
+                    
+                    if (!img) {
+                        alert('画像が見つかりません');
+                        return;
+                    }
+                    
+                    // 高解像度Canvas作成
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    var downloadSize = 1024; // 高解像度
+                    
+                    canvas.width = downloadSize;
+                    canvas.height = downloadSize;
+                    
+                    // 新しいImageオブジェクトを作成（CORS対応）
+                    var newImg = new Image();
+                    newImg.crossOrigin = 'anonymous';
+                    
+                    newImg.onload = function() {
+                        console.log('=== Canvas描画開始 ===');
+                        console.log('画像読み込み完了:', newImg.src);
+                        
+                        // 画像サイズ計算（基準サイズ120pxをベースに高解像度用にスケール）
+                        var baseSize = 120; // プレビューでの基準サイズ
+                        var scaledBaseSize = (downloadSize / 200) * baseSize; // 1024/200*120 = 614.4px が基準
+                        var imageSize = Math.round((scaledBaseSize * config.size) / 100);
+                        console.log('画像サイズ計算:', {
+                            基準サイズ: baseSize + 'px',
+                            高解像度基準: scaledBaseSize + 'px', 
+                            設定パーセンテージ: config.size + '%',
+                            最終サイズ: imageSize + 'px'
+                        });
+                        
+                        if (config.shape === 'circle') {
+                            console.log('円形で描画');
+                            // 円形の場合
+                            ctx.beginPath();
+                            ctx.arc(downloadSize / 2, downloadSize / 2, downloadSize / 2, 0, Math.PI * 2);
+                            ctx.fillStyle = config.color;
+                            ctx.fill();
+                            ctx.clip();
+                        } else {
+                            console.log('角丸四角で描画');
+                            // 角丸四角の場合
+                            var radius = downloadSize * 0.1; // 10%の角丸
+                            drawRoundedRect(ctx, 0, 0, downloadSize, downloadSize, radius);
+                            ctx.fillStyle = config.color;
+                            ctx.fill();
+                            ctx.clip();
+                        }
+                        
+                        console.log('背景色:', config.color);
+                        
+                        // 画像を描画
+                        var imgX = (downloadSize - imageSize) / 2;
+                        var imgY = (downloadSize - imageSize) / 2;
+                        console.log('画像描画位置:', 'x=' + imgX, 'y=' + imgY, 'サイズ=' + imageSize);
+                        ctx.drawImage(newImg, imgX, imgY, imageSize, imageSize);
+                        
+                        // ダウンロード実行
+                        var link = document.createElement('a');
+                        link.download = 'custom-icon-' + Date.now() + '.png';
+                        link.href = canvas.toDataURL('image/png');
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        console.log('ダウンロード完了', {
+                            最終設定: config,
+                            キャンバスサイズ: downloadSize,
+                            画像サイズ: imageSize
+                        });
+                    };
+                    
+                    newImg.onerror = function() {
+                        alert('画像の読み込みに失敗しました');
+                    };
+                    
+                    newImg.src = img.src;
+                }
+                
+                // 角丸四角形描画関数
+                function drawRoundedRect(ctx, x, y, width, height, radius) {
+                    ctx.beginPath();
+                    ctx.moveTo(x + radius, y);
+                    ctx.lineTo(x + width - radius, y);
+                    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+                    ctx.lineTo(x + width, y + height - radius);
+                    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                    ctx.lineTo(x + radius, y + height);
+                    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+                    ctx.lineTo(x, y + radius);
+                    ctx.quadraticCurveTo(x, y, x + radius, y);
+                    ctx.closePath();
                 }
             </script>
-            <div id="<?php echo esc_attr($unique_id); ?>"></div>
         </div>
         <?php
         return ob_get_clean();
@@ -377,134 +609,8 @@ class IconCustomizer {
      * @return string           プレビューHTML
      */
     private function generate_editor_preview_html($attributes) {
-        // 属性値を安全な形でHTMLに埋め込むためのエスケープ処理
-        $escaped_image_url = esc_url($attributes['image']);
-        $escaped_width = esc_attr($attributes['width']);
-        $escaped_height = esc_attr($attributes['height']);
-        
-        // プレビュー用のHTML構築
-        // ※ 出力バッファリングを使用して複数行HTMLを安全に構築
-        ob_start();
-        ?>
-        <!-- Icon Customizer エディタープレビュー開始 -->
-        <div class="icon-customizer-editor-preview" style="margin: 16px 0; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            
-            <!-- プレビューヘッダー: 何のブロックかを明示 -->
-            <div class="preview-header" style="
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 12px 16px;
-                font-size: 14px;
-                font-weight: 600;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            ">
-                <!-- アイコンで視覚的にわかりやすく -->
-                <span style="font-size: 16px;">🎨</span>
-                <span>Icon Customizer</span>
-            </div>
-            
-            <!-- プレビューコンテンツ: 実際のアイコン表示エリア -->
-            <div class="preview-content" style="
-                background: #f8f9fa;
-                padding: 24px;
-                text-align: center;
-                min-height: 120px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                position: relative;
-            ">
-                
-                <!-- 背景パターン（チェッカーボード）で透過部分を可視化 -->
-                <div style="
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    opacity: 0.1;
-                    background-image: 
-                        linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                        linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                        linear-gradient(45deg, transparent 75%, #ccc 75%), 
-                        linear-gradient(-45deg, transparent 75%, #ccc 75%);
-                    background-size: 20px 20px;
-                    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-                "></div>
-                
-                <!-- メインアイコン表示 -->
-                <div style="position: relative; z-index: 1;">
-                    
-                    <!-- デフォルトの円形背景 (プレビューでは固定設定) -->
-                    <div style="
-                        width: 80px;
-                        height: 80px;
-                        background: linear-gradient(135deg, #60a5fa, #3b82f6);
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin: 0 auto 12px;
-                        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.3);
-                    ">
-                        <!-- 画像表示 (エラー時はプレースホルダー表示) -->
-                        <img 
-                            src="<?php echo $escaped_image_url; ?>" 
-                            alt="Icon Preview"
-                            style="
-                                width: 48px;
-                                height: 48px;
-                                object-fit: contain;
-                                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-                            "
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                        />
-                        
-                        <!-- 画像読み込み失敗時のフォールバック表示 -->
-                        <div style="
-                            display: none;
-                            width: 48px;
-                            height: 48px;
-                            background: rgba(255,255,255,0.9);
-                            border-radius: 4px;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 20px;
-                        ">
-                            🖼️
-                        </div>
-                    </div>
-                    
-                    <!-- プレビュー説明テキスト -->
-                    <div style="
-                        font-size: 12px;
-                        color: #64748b;
-                        margin-top: 8px;
-                    ">
-                        フロントエンドでカスタマイズ可能
-                    </div>
-                    
-                    <!-- 設定値表示（デバッグ情報として小さく表示） -->
-                    <div style="
-                        font-size: 10px;
-                        color: #94a3b8;
-                        margin-top: 4px;
-                        opacity: 0.7;
-                    ">
-                        サイズ: <?php echo $escaped_width; ?> × <?php echo $escaped_height; ?>
-                    </div>
-                    
-                </div>
-            </div>
-            
-        </div>
-        <!-- Icon Customizer エディタープレビュー終了 -->
-        <?php
-        
-        // 出力バッファの内容を取得してクリア
-        return ob_get_clean();
+        // プレビュー表示を完全に無効化
+        return '';
     }
     
     /**

@@ -37,7 +37,10 @@ export const ColorPalette: React.FC<ColorPaletteProps> = ({
               cursor: 'pointer',
               transition: 'all 0.2s ease'
             }}
-            onClick={() => onColorChange(swatch.color)}
+            onClick={() => {
+              console.log('色選択:', swatch.color);
+              onColorChange(swatch.color);
+            }}
             onMouseEnter={(e) => {
               if (bgColor !== swatch.color) {
                 e.currentTarget.style.transform = 'scale(1.1)';

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Box, Alert } from '@mantine/core';
+import { Alert } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { CONTAINER_SIZE } from '../../constants';
 
@@ -48,8 +48,44 @@ export const IconPreview: React.FC<IconPreviewProps> = ({
     overflow: 'hidden' as const,
   }), [bgColor, shape, isEditing]);
 
+  // WordPress環境でのCSS強制適用用のstyle要素を作成
+  React.useEffect(() => {
+    if (isEditing) {
+      // 動的にCSSを注入してWordPressテーマを上書き
+      const styleId = 'icon-preview-force-style';
+      let existingStyle = document.getElementById(styleId);
+      
+      if (!existingStyle) {
+        existingStyle = document.createElement('style');
+        existingStyle.id = styleId;
+        document.head.appendChild(existingStyle);
+      }
+      
+      existingStyle.textContent = `
+        [data-icon-container] {
+          background-color: ${bgColor} !important;
+          background: ${bgColor} !important;
+        }
+        .icon-preview-container {
+          background-color: ${bgColor} !important;
+          background: ${bgColor} !important;
+        }
+      `;
+      
+      console.log('🎨 CSS強制適用:', bgColor);
+    }
+  }, [bgColor, isEditing]);
+
   return (
-    <Box data-icon-container style={containerStyle}>
+    <div 
+      data-icon-container 
+      style={{
+        ...containerStyle,
+        backgroundColor: isEditing ? bgColor : 'transparent',
+        background: isEditing ? bgColor : 'transparent',
+      }}
+      className="icon-preview-container"
+    >
       {hasImageError ? (
         <Alert 
           icon={<IconAlertCircle size="1rem" />} 
@@ -79,6 +115,6 @@ export const IconPreview: React.FC<IconPreviewProps> = ({
           crossOrigin="anonymous"
         />
       )}
-    </Box>
+    </div>
   );
 };

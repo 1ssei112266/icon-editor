@@ -55,18 +55,6 @@ registerBlockType('icon-customizer/icon-block', {
         };
         
         return createElement('div', { className: 'icon-customizer-block' },
-            // ヘッダー
-            createElement('div', {
-                style: {
-                    background: '#667eea',
-                    color: 'white',
-                    padding: '10px',
-                    textAlign: 'center',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                }
-            }, '🎨 Icon Customizer'),
-            
             // URL入力
             createElement(TextControl, {
                 label: '画像URL',
