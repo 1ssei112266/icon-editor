@@ -1,20 +1,23 @@
-# Icon Customizer - WordPressプラグイン
+# Icon Customizer - WordPress連携 Reactアイコンエディタ
 
-WordPress埋め込み可能なアイコンカスタマイザープラグイン。ユーザーがアイコンの形状、サイズ、背景色を自由にカスタマイズできます。
+WordPress埋め込み可能な高品質アイコンカスタマイザー。React 19とTailwind CSS 4で構築されたモダンなアイコンエディタです。
 
 ## 🚀 特徴
 
-- **簡単インストール**: ZIPファイルをアップロードするだけ
+### 基本機能
 - **ショートコード対応**: `[icon_customizer]` で任意の場所に設置
-- **2つのダウンロード機能**:
-  - 元画像そのまま（透過PNG）
-  - カスタマイズ済み画像（背景色・形状適用）
+- **高解像度出力**: 1024px高品質PNG ダウンロード
 - **直感的なカスタマイズ**:
-  - 形状変更（円形・角丸四角）
+  - 形状変更（完全円形・iOS風角丸四角）
   - サイズ調整（10%-150%）
-  - 背景色選択（プリセット + カスタム）
-- **完全レスポンシブ**: PC・タブレット・スマホ対応
-- **WordPressテーマ対応**: 透明背景でどのテーマにも馴染む
+  - 背景色選択（プリセット + カスタムカラーピッカー）
+
+### 技術的特徴
+- **React 19 + TypeScript**: 最新技術スタックでの高品質実装
+- **完全レスポンシブ**: モバイル最適化とタッチ操作対応
+- **エラーハンドリング**: ローディング状態とエラー通知システム
+- **CORS対応**: 外部画像URLサポート
+- **WordPress互換性**: SWELLテーマ対応、`tw-` prefixでスタイル競合回避
 
 ## 📦 インストール方法
 
@@ -75,25 +78,75 @@ WordPress埋め込み可能なアイコンカスタマイザープラグイン�
 
 ## 🛠 技術仕様
 
-- **フロントエンド**: React 19, TypeScript, Mantine UI
-- **ビルドツール**: Vite
+### フロントエンド
+- **React**: 19.1.0 (最新安定版)
+- **TypeScript**: 5.8.3 (型安全性)
+- **UI Framework**: Mantine Core 8.2.4
+- **CSS Framework**: Tailwind CSS 4.1.11 (`tw-` prefix)
+- **ビルドツール**: Vite 7.0.4
+- **Canvas処理**: html2canvas (高解像度PNG出力)
+
+### WordPress連携
 - **対応WordPress**: 5.0以上
 - **対応PHP**: 7.4以上
 - **ライセンス**: GPL v2 or later
 
-## 📁 ファイル構成
+### 開発環境
+- **ESLint**: 9.30.1 (コード品質)
+- **PostCSS**: 8.5.6 + Autoprefixer
+- **TypeScript**: 厳密な型チェック
 
+## 📁 プロジェクト構成
+
+### 開発環境
+```
+icon-editor/
+├── src/
+│   ├── components/          # Reactコンポーネント（Atomic Design）
+│   │   ├── atoms/          # 基本UI要素
+│   │   │   ├── IconPreview.tsx    # アイコンプレビュー + PNG ダウンロード
+│   │   │   └── ShapeSelector.tsx  # 形状選択（circle/square）
+│   │   ├── molecules/      # 組み合わせコンポーネント
+│   │   ├── organisms/      # 複合コンポーネント
+│   │   └── templates/      # レイアウトテンプレート
+│   ├── App.tsx             # メインアプリケーション
+│   └── main.tsx            # エントリーポイント
+├── public/                 # 静的ファイル
+├── package.json           # 依存関係とスクリプト
+└── README.md             # プロジェクト説明書
+```
+
+### WordPressプラグイン
 ```
 icon-customizer/
 ├── icon-customizer.php    # メインプラグインファイル
 ├── readme.txt            # WordPress公式用README
 ├── assets/
-│   ├── index.css         # スタイルシート
-│   ├── index.js          # JavaScriptファイル
+│   ├── index.css         # ビルド済みスタイルシート
+│   ├── index.js          # ビルド済みJavaScript
 │   └── dummy-icon.png    # デフォルト画像
 ```
 
-## 🔧 カスタマイズ
+## 🔧 開発・カスタマイズ
+
+### 開発環境セットアップ
+
+```bash
+# 依存関係インストール
+npm install
+
+# 開発サーバー起動
+npm run dev
+
+# 本番用ビルド
+npm run build
+
+# コード品質チェック
+npm run lint
+
+# プレビュー（ビルド後の確認）
+npm run preview
+```
 
 ### デフォルト画像を変更
 
@@ -103,6 +156,12 @@ icon-customizer/
 
 プラグインの設定を変更することで、デフォルトの色パレットを変更できます。
 
+### WordPress テーマ互換性
+
+- 必ず `tw-` prefix を使用してスタイル競合を防止
+- SWELLテーマでのテスト実施済み
+- ショートコード埋め込み時の動作確認必須
+
 ## 🐛 トラブルシューティング
 
 ### よくある問題
@@ -111,14 +170,22 @@ icon-customizer/
 - プラグインが有効化されているか確認
 - ショートコードが正しく記述されているか確認
 - 画像URLが正しくアクセス可能か確認
+- コンソールでCORSエラーがないか確認
 
 **Q: カスタマイズ画面が表示されない**  
 - ブラウザのJavaScript実行が有効になっているか確認
 - 他のプラグインとの競合がないか確認
+- Reactコンポーネントのロード失敗がないか確認
 
 **Q: ダウンロードできない**
 - ブラウザのポップアップブロックが無効になっているか確認
 - 画像のCORS設定が正しいか確認
+- Canvas要素の描画エラーがないか確認
+
+**Q: スタイルが競合する**
+- Tailwind CSSの `tw-` prefixが正しく適用されているか確認
+- WordPressテーマとのCSS競合を確認
+- ブラウザ開発者ツールでスタイル上書きを確認
 
 ### サポート
 
@@ -139,14 +206,30 @@ GPL v2 or later
 
 ## 📝 変更履歴
 
-### v1.0.0 (2025-08-16)
-- 初回リリース
-- 基本的なアイコンカスタマイズ機能
-- WordPressプラグイン化
-- ショートコード対応
-- レスポンシブデザイン対応
+### v1.0.24 (2025-08-30) - 最新版
+- **完全版リリース**: 全フェーズ完了
+- React 19.1.0 + TypeScript 5.8.3 へアップデート
+- Tailwind CSS 4.1.11 (`tw-` prefix) 完全対応
+- Mantine UI 8.2.4 統合
+- 高解像度1024px PNG出力対応
+
+### v1.0.7 (2025-08-29)
+- React CreateRoot 重複エラー (#299) 修正版
+- エラーハンドリングシステム強化
+- ローディング状態の改善
+
+### v1.0.6 (2025-08-28)
+- クリーンUI対応
+- モバイル最適化とタッチ操作改善
+- パフォーマンス最適化（useCallback/useMemo）
+
+### Phase 1-3 完了済み機能
+- **Phase 1**: 基本機能（プレビュー、ダウンロード、形状・色・サイズ変更）
+- **Phase 2**: WordPress REST API連携、ACF対応、フォールバック機能
+- **Phase 3**: UX改善、エラーハンドリング、高品質出力、形状品質向上
 
 ---
 
 **開発者**: IsseiSuzuki  
-**リポジトリ**: https://github.com/1ssei112266/icon-editor
+**リポジトリ**: https://github.com/1ssei112266/icon-editor  
+**技術スタック**: React 19 + TypeScript + Tailwind CSS 4 + Vite 7
