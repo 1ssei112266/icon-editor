@@ -1,3 +1,4 @@
+
 # Icon Customizer
 
 ## はじめに
@@ -72,7 +73,6 @@ Canvas APIでノイズのない1024px PNGを生成。CORSハンドリング、�
   "typescript": "5.8.3",
   "vite": "7.0.4"
 }
-```
 
 ### 🚀 推奨デプロイ
 - Reactアプリ: Vercel / Netlify / Cloudflare Pages（`dist/` を配信）
@@ -95,6 +95,7 @@ npm install
 npm run dev
 ```
 
+
 ### 📋 開発コマンド
 ```bash
 npm run dev      # Vite開発サーバー (http://localhost:5173)
@@ -102,7 +103,6 @@ npm run build    # TypeScriptビルド + Vite本番ビルド
 npm run preview  # distのプレビュー
 npm run lint     # ESLint
 ```
-
 ### 🌐 WordPressへの導入
 1. `wordpress-plugin/icon-customizer` をZIP化（または付属ZIPを使用）
 2. WP管理画面 > プラグイン > 新規追加 > アップロードでZIPをインストール
@@ -144,7 +144,7 @@ icon-editor/
 - ACF / Gutenberg ブロック対応でのUI統合
 - 利用分析（どのプリセットが多いかなど）ダッシュボード
 
-## ライセンス / コントリビューション
-- ライセンス: GPL v2 or later
-- Issue / PR 歓迎です。再現手順・環境情報・スクリーンショットを添えてください。
-- 開発者: IsseiSuzuki — https://github.com/1ssei112266/icon-editor
+**開発者**: IsseiSuzuki  
+**リポジトリ**: https://github.com/1ssei112266/icon-editor  
+**技術スタック**: React 19 + TypeScript + Tailwind CSS 4 + Vite 7
+
