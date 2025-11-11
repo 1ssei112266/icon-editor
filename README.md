@@ -83,7 +83,7 @@ https://github.com/user-attachments/assets/c0277bbe-d78e-42a1-b379-319d6a235ae4
   "typescript": "5.8.3",
   "vite": "7.0.4"
 }
-
+```
 ### 🚀 推奨デプロイ
 - Reactアプリ: Vercel / Netlify / Cloudflare Pages（`dist/` を配信）
 - WordPressプラグイン: 既存WP環境へ `icon-customizer.zip` をアップロード
